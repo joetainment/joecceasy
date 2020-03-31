@@ -1,3 +1,9 @@
+/gitignore*
+gitignore*
+__pycache__
+
+## Everything below is from github's python default .gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
