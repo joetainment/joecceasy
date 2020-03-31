@@ -14,13 +14,13 @@ This module is intentionally and explicitly made to work in ways that are not li
 Goals:
 ========
 
--Allow easy script like files and one liners that minimize keyboard typing and avoid boilerplate code or reinventing the wheel and are thus able to be used instead of batch script and shell ultimately bringing together the best of both worlds.
+-Allow easy script like files and one liners that minimize keyboard typing and avoid boilerplate code or reinventing the wheel and are thus able to be used instead of bash scripts or Windows batch scripts, ultimately bringing together the best of both worlds.
 
 -Should allow scripts to avoid manually importing a bunch of modules, they should be available in: Easy.Modules
 
--Make code easier to read by1 doing things such as reducing the need for nested parenthesis.
+-Make code easier to read by doing things such as reducing the need for nested parenthesis.
 
--Provide many easy to reach convenience functions ( as class methods or static methods of primary class)
+-Provide many easy to reach convenience functions ( as class methods or static methods of primary class).
 
 -Provide easier ways of handling string literals for copying and pasting Windows paths.
 
