@@ -47,6 +47,10 @@ Python problems that motivated creation of this module:
 ===============================
 
 - One liners are difficult to write and tend to have too many nested parenthesis
+
 - Strings aren't friendly for copy/pasting microsoft windows paths into python code
+
 - Nested parens, nested quotes, etc.
+
 - A pain to call external scripts, sh or bat files.
+
