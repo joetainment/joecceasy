@@ -8,9 +8,9 @@ A Python Module To Make Python Easy
 
 This module is an early work in progress, mostly written to be useful for Joe Crawford. It largely exists to make writing Python scripts require less typing, since Joe Crawford has medical issues that prevent much typing. (Much of joecceasy was in fact written using voice recognition.)
 
-This module is intentionally and explicitly made to work in ways that are not like idiomatic Python. It is purposefully "hack'ish" and is prioritizes practicality over any kind of code purity. It helps the user "get the job done" by trading some elegance for practical shortcuts.
+This module is intentionally and explicitly made to work in ways that are not like idiomatic Python. It is purposefully "hack'ish" and it prioritizes practicality over any kind of code purity. It helps the user "get the job done" by trading some elegance for practical shortcuts.
 
-However, the module also attempts not to interfere with regular Python programming unless you explicitly enable such features. Users should be able to use as little or as much of joecceasy's features as they like.
+However, the module also attempts not to interfere with regular Python programming unless you explicitly enable such features. Users should be able to use as few or as many of joecceasy's features as they like.
 
 Code can use no magic...
 
