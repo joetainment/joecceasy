@@ -36,7 +36,7 @@ from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
 ```
 #%call echo If we use a special interpreter to run the script
 #%call echo we don't even need import lines or other boilerplate code.
-#%call Finally, python-based scripts as short as bash or batch scripts!
+#%call echo Finally, python-based scripts as short as bash or batch scripts!
 ```
 
   
