@@ -1,8 +1,13 @@
 
-def callInitClass( cls ):
-    cls.InitClass()
+## not really needed since we use metaclasses instead
+def callInitCls( cls ):
+    cls.InitCls()
     return cls
-    
+
+
+## classproperty only works for getters
+## to make read/write work use @property properties
+## on a metaclass instead 
 class classproperty(property):
         def __get__(self, obj, objtype=None):
             return super(classproperty, self).__get__(objtype)
@@ -13,3 +18,4 @@ class classproperty(property):
 
 class Object(object):
     pass
+
