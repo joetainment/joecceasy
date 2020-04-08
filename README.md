@@ -27,6 +27,8 @@ from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
 
 ## You can easily made system/shell calls with much more literal syntax
 #%call echo This is a magic comment that calls the system's/shell's echo function.
+
+## see more examples of magic in the examples section of this readme.
 ```
 
 .. or, even more magic, by launching the script with a custom interpreter ...
@@ -82,9 +84,9 @@ Python problems that motivated creation of this module:
 
 - A pain to call external scripts, sh or bat files.
 
-
-
-
+  
+  
+  
 
 More Examples
 ==============
@@ -107,7 +109,7 @@ from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
 msg = "Here's a substituted message."
 #%call echo #%msg%#
 
-#%callq echo This is a magic comment that quiets calls the echo function.
+#%callq echo This is a magic comment that quiet calls the echo function.
 ## The quiet call won't be output directly, but it is captured.
 o = tmpReturned.stdout
 print( f"Captured output was: {tmpReturned.stdout}" )
