@@ -6,9 +6,37 @@ joecceasy
 A Python Module To Make Python Easy
 --------------------------------------
 
-This module is an early work in progress, mostly written to be useful for Joe Crawford. It largely exists to make writing Python scripts require less typing, since Joe Crawford has medical issues that prevent much typing.
+This module is an early work in progress, mostly written to be useful for Joe Crawford. It largely exists to make writing Python scripts require less typing, since Joe Crawford has medical issues that prevent much typing. (Much of joecceasy was in fact written using voice recognition.)
 
-This module is intentionally and explicitly made to work in ways that are not like idiomatic Python.
+This module is intentionally and explicitly made to work in ways that are not like idiomatic Python. It is purposefully "hack'ish" and is prioritizes practicality over any kind of code purity. It helps the user "get the job done" by trading some elegance for practical shortcuts.
+
+However, the module also attempts not to interfere with regular Python programming unless you explicitly enable such features. Users should be able to use as little or as much of joecceasy's features as they like.
+
+Code can use no magic...
+
+```python
+from joecceasy import Easy
+print( Easy.Args )
+```
+
+...or, lot's of magic...
+
+```
+from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
+######## everything after the #%exit line is run through/via the magic
+
+## You can easily made system/shell calls with much more literal syntax
+#%call echo This is a magic comment that calls the system's/shell's echo function.
+```
+
+.. or, even more magic, by launching the script with a custom interpreter ...
+
+```
+#%call echo If we use a special interpreter to run the script
+#%call echo we don't even need import lines or other boilerplate code.
+#%call Finally, python-based scripts as short as bash or batch scripts!
+```
+
   
   
 Goals:
@@ -54,3 +82,67 @@ Python problems that motivated creation of this module:
 
 - A pain to call external scripts, sh or bat files.
 
+
+
+
+
+More Examples
+==============
+
+
+Various uses of Magic
+---------------
+```
+from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
+######## everything after the #%exit line is run through the magic
+
+#### Here's some examples of magic/easy things:
+
+## You can easily made system/shell calls with much more literal syntax
+## that is friendly to copy/pasting paths
+
+#%call echo This is a magic comment that calls the system's/shell's echo function.
+
+## You can do variable substitution as well:
+msg = "Here's a substituted message."
+#%call echo #%msg%#
+
+#%callq echo This is a magic comment that quiets calls the echo function.
+## The quiet call won't be output directly, but it is captured.
+o = tmpReturned.stdout
+print( f"Captured output was: {tmpReturned.stdout}" )
+
+## All modules are available without importing, and are lazy loaded as required:
+cwdStr = Easy.Mods.os.getcwd()
+print( f"Current working directory is: {cwdStr}" )
+```
+
+Easy.TrimAndTab
+---------------
+
+```
+from joecceasy import Easy
+if 'code block'!='has indentation':
+    msg1 = Easy.TrimAndTab( r"""
+        ## Indentation Marker
+        This text will be unindented, allowing multiline
+        strings to fit nicely into code blocks.
+        
+        Here's a windows path, with backslashes,
+        copy and pasted without concerns about it
+        ending with a backslash:
+    """)
+    msg2 = Easy.TrimAndTab( r"""
+        ##
+        C:\Users\Public\
+    """)
+    print( msg1 )
+    print( msg2 )
+    msg3 = Easy.TrimAndTab( r"""
+        ###
+        These sorts of tricks make dealing with windows paths
+        much less error prone, all while keeping all code,
+        even the string parts, indented fully inside the block.
+    """)
+    print( msg3 )
+```
