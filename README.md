@@ -100,7 +100,7 @@ from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
 
 #### Here's some examples of magic/easy things:
 
-## You can easily made system/shell calls with much more literal syntax
+## You can easily make system/shell calls with much more literal syntax
 ## that is friendly to copy/pasting paths
 
 #%call echo This is a magic comment that calls the system's/shell's echo function.
