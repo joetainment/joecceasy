@@ -25,7 +25,7 @@ print( Easy.Args )
 from joecceasy import Easy; exec(Easy.Magic); exit(); #%exit
 ######## everything after the #%exit line is run through/via the magic
 
-## You can easily made system/shell calls with much more literal syntax
+## You can easily make system/shell calls with much more literal syntax
 #%call echo This is a magic comment that calls the system's/shell's echo function.
 
 ## see more examples of magic in the examples section of this readme.
