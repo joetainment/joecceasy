@@ -121,7 +121,7 @@ if oldArg0==None or oldArg1==None or len(sys.argv)<1:
 
 ## get Easy
 joecceasy = sys.modules[__package__] 
-Easy = sys.modules[__package__].Easy
+Easy = joecceasy.Easy
 Easy.Inst
 
 

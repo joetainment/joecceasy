@@ -1,0 +1,12 @@
+
+Git Push Origin Master:
+  git push origin master
+
+Git Init Bare - On server do:
+  git --bare init
+
+Symbolic Link On Windows, System-wide:
+(you could potentially do it per user instead...)
+  cd C:\Program Files\Python37\Lib\site-packages
+  mklink /d joecceasy "C:\nextcloud\s\JoeccCodeDev\joecceasy\joeccjoecceasy"
+

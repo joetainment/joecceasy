@@ -1,5 +1,18 @@
+#### Gitignore prefixes
 /gitignore*
 gitignore*
+_gitignore*
+__gitignore*
+___gitignore*
+-gitignore*
+--gitignore*
+---gitignore*
+----gitignore*
+----gitignore*
+zzz----gitignore*
+000aaa----gitignore*
+
+
 __pycache__
 
 ## Everything below is from github's python default .gitignore
