@@ -6,9 +6,34 @@ Which should follow similar dependency rules
 
 This module is one of the first things imported by joecceasy
 And should not circularly import it or other things
+
+as a general rule, this module should be safe to import
+with confidence, knowing that its import alone won't run
+any code other than code that defines classes, functions,
+and maybe some really basic variables
+
+pretty much everything done in this file is done inside
+of the functions or classes. Global vars set are only
+UtilsModLoadingIsComplete and a bunch of aliases
+for the functions and classes
 """
+## Here we explicitly do not import anything
+## immediately. Not builtins, and nothing
+## like SelfMod or SelfPak or Easy
+## because we want to avoid triggering any code
+## to run
+##
+## Most vars made are just aliases for
+## functions and classes
+##
+## The only global var that isn't an alias is:
+##  UtilsModLoadingIsComplete, which get set True
+##  at end of this file
+UtilsModLoadingIsComplete=False
+##
 ####################################################
 ## raw functions that can't be part of class
+
 
 def seePrint( var, val,   sep=' ',end='\n', 
               withType=True, withTime=False, withNonRepr=False,
@@ -90,7 +115,12 @@ def see(*args, sep=' ', end='\n', **kwargs):
             try:
                 argsList[i+1:i+1]=arg
             except:
-                pass
+                try:
+                    argToInsert = str(arg)
+                    assert isinstance(str, argToInsert)
+                    argsList.insert(i+1, argToInsert )
+                except:
+                    pass
         i+=1
     return retval
 
@@ -292,7 +322,16 @@ class Funcs(object):
         s = re.sub('\b+', '', t)
         ## string should now have no backspaces
         return s
-    
+
+    @classproperty
+    def Args(cls):
+        import sys
+        return sys.argv[1:]
+
+    @classproperty
+    def ArgsCount(cls):
+        import sys
+        return len( sys.argv[1:] )
 
     @classmethod
     def Cd(cls, path):
@@ -489,6 +528,7 @@ class Funcs(object):
 
     @classmethod
     def EnumArgs(cls):
+        import sys
         return enumerate( sys.argv[1:] )
     
     @classmethod
@@ -1053,7 +1093,7 @@ class Funcs(object):
 
 
 
-
+UtilsModLoadingIsComplete=True
 '''
 decorator todo:
 def export(func):

@@ -9,14 +9,12 @@ import os, sys, time
 ## joecceasy module is fully loaded
 SelfPak=__import__(__package__)    
 SelfMod=sys.modules[__name__]
-import joecceasy
-from . import Easy
-EasyMod = Easy.Mod
-from .Easy import Easy
-assert Easy.LoadingOfSelfModIsComplete==True
-
-
 from .Utils import classproperty
+import joecceasy
+from . import EasyMod
+from . import Easy
+assert EasyMod.EasyModLoadingIsComplete==True
+
 
 import asciimatics
 import asciimatics.screen

@@ -110,10 +110,7 @@ SelfMod=sys.modules[__name__]
 ## to avoid circular import problems
 SelfModLoadingCompleteCallbacks = []
 ## this can be checked to prevent circular imports
-LoadingOfSelfModIsComplete=False  ## *** deprecated, use SelfModLoadingIsComplete
-SelfModLoadingIsComplete=False
-
-
+EasyModLoadingIsComplete=False
 
 
 ##################################################
@@ -123,9 +120,9 @@ SelfModLoadingIsComplete=False
 #################################
 #### Python Standard Library imports
 ####
-import atexit, collections, datetime, importlib, inspect
-import os, sys, subprocess, time, tempfile, traceback
-from _ctypes import ArgumentError
+#import atexit, collections, datetime, importlib, inspect
+#import os, sys, subprocess, time, tempfile, traceback
+#from _ctypes import ArgumentError
 
 
 #################################
@@ -180,13 +177,13 @@ class EasyMeta(type):
     getters and setters
     """
     @property
-    def LoadingOfSelfModIsComplete(cls):
-        global LoadingOfSelfModIsComplete
-        return LoadingOfSelfModIsComplete
-    @LoadingOfSelfModIsComplete.setter
-    def LoadingOfSelfModIsComplete(cls, v):
-        global LoadingOfSelfModIsComplete
-        LoadingOfSelfModIsComplete = v
+    def EasyModLoadingIsComplete(cls):
+        global EasyModLoadingIsComplete
+        return EasyModLoadingIsComplete
+    @EasyModLoadingIsComplete.setter
+    def EasyModLoadingIsComplete(cls, v):
+        global EasyModLoadingIsComplete
+        EasyModLoadingIsComplete = v
     @property
     def P(cls):
         return getattr( cls, '_P', None)
@@ -357,11 +354,15 @@ class Easy( metaclass=EasyMeta ):
         
     @classproperty
     def Args(cls):
-        return sys.argv[1:]
+        return Funcs.Args
         
     @classproperty
     def ArgsCount(cls):
-        return len( sys.argv[1:] )
+        return Funcs.ArgsCount
+        
+    @classproperty
+    def ArgCount(cls):
+        return Funcs.ArgsCount
     
     @classproperty
     def ArgsE(cls):
@@ -423,6 +424,10 @@ class Easy( metaclass=EasyMeta ):
     
     @classproperty
     def CiDict(self):
+        return Utils.CaseInsensitiveDict
+    
+    @classproperty
+    def CaseInsensitiveDict(self):
         return Utils.CaseInsensitiveDict
 
     @classproperty
@@ -1253,6 +1258,7 @@ class Easy( metaclass=EasyMeta ):
             shouldAutoLoadCode=False,
             shouldAutoRecode='unimplemented'
         ):
+        import os, sys
         
         self.__shouldAutoInit = shouldAutoInit
         self.__shouldAutoChdirToArg0Dir = shouldAutoChdirToArg0Dir
@@ -1306,6 +1312,8 @@ class Easy( metaclass=EasyMeta ):
         
     
     def init(self):  ## intentionally takes no arguments other than self
+        global os
+        import os
         if self._hasBeenInit==True:
             return self
         ## Fallback via temporary argv fake file
@@ -1327,7 +1335,7 @@ class Easy( metaclass=EasyMeta ):
         return self
         
     def actionCall(self, argsForCommandLine, magicDict=None, quiet=False, loud=False, interactive=False):
-
+        import subprocess
         if magicDict!=None:
             for k, v in magicDict.items():
                 mkey = '#%' + k + '%#'
@@ -1402,7 +1410,6 @@ class Easy( metaclass=EasyMeta ):
     @property
     def magicConf(self):
         return self.MagicConf
-
         
     def loadCode(self):
         if self.argv0!=None and self.argv0!='':
@@ -1541,8 +1548,8 @@ class Easy( metaclass=EasyMeta ):
         
 
 ## this can be checked to prevent circular imports
-LoadingOfSelfModIsComplete=True
-SelfModLoadingIsComplete=True
+EasyModLoadingIsComplete=True
+EasyModLoadingIsComplete=True
 for cb in SelfModLoadingCompleteCallbacks:
     if False:
         ## *** todo, add check for callback type object with args and kargs

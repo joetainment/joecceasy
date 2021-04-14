@@ -1,20 +1,40 @@
 r"""
 joecceasy python package __init__.py
 
-Recommended way of importing, without magic, is:
+For prototyping and short scripts without boiler plate code!
+Remember, joecceasy is intentionally non-pythonic and 
+does not follow "best practices", but it "gets it done quick".
+
+## Recommended way of importing, without magic, is:
 from joecceasy import Easy
+
+## or...
 from joecceasy import *
+    ## using * will import Easy the same way, but it is
+    ## but is less explicit, so it may be less obvious to others
 
-Recommended way of importing, with magic, is:
-from joecceasy import Easy; exec(Easy.CodeQ); exit(); #%exit
+## Recommended way of importing, with magic, is:
+from joecceasy import *; exec(Easy.CodeQ); exit(); #%exit
+  ## keep the #%exit in the line above
 
 
-Note, as a general rule, lowercase is only used for
-local vars in functions, funcs in functions instance methods
-(regular methods of classes) or module level vars
-that aren't intended to be used outside the module.
-Classes, and externally useful var and funcs
+See the examples folder in the git source repository
+for all sorts of examples of using joecceasy
+and to see just how useful it can be.
 
+
+Note, as a general rule, lowercase is only used for:
+    - python builtins that have those standard names
+        e.g. "os"
+    - local vars in functions
+    - module level vars, usually these aren't
+        intended to be used by end users
+    - plain functions in module scope or inside local scopes
+        generally not thing intended to be called directly
+        from outside the scope they are declared in
+    - plain funcs inside other functions or methods
+    - regular methods of classes
+        not classmethods or static methods
 
 to do:
   add option to cd to script dir
@@ -44,7 +64,11 @@ to do:
 
 
 Highlights:
-  Easy.ArgsE    enumerated arguments iterator!
+  Easy.Args
+      doesn't include arg zero, (which is usually script itself)
+  Easy.ArgsE    enumerated arguments iterator!  e.g.
+      for i,arg in Easy.ArgsE:
+          print( f"arg number {i} is {arg}" )
   Easy.ArgsCount
     both above only have args to your script, not script itself    
 
@@ -61,12 +85,39 @@ Highlights:
     Init won't get called automatically
     This is to keep "static behavior"
     Avoid doing anything prior to being called.
+    
 
+  Easy.Magic can also be used instead, which provides of ton
+      of extra "magic" functionality, such as populating
+      the script with standard joecceasy vars.
+      Using magic pretty much gives a joecceasy DSL.  ;)
+      It exists specifically for writing useful One liners and
+      other short scripts.
+
+  Easy.Ic
+    **warning do not use if var potentially contains untrusted code**
+    prints the var's in code name and its value and type
+    is inspired by icecream module, but is different
+    e.g.
+        x = "this will be printed"
+        Easy.Ic( x )
+    
+    
+  Easy.See
+    **warning do not use if var potentially contains untrusted code**
+    is similar to ic but takes an expression instead of code
+    generally shows repr.   Anything that isn't a string will
+    be expanded, so it works on lists of expressions etc
+    will skip things that can't be expanded into strings
+    e.g.
+        x = 3
+        Easy.See( 'x+3' )
 
   Easy.Fstring - For Using "late" F-Strings:
-    exampleToFormat = "example number is: {number}"  ## no subs yet
-    number = 1  ## now number is defined, late
-    result = eval( Easy.Fstring( exampleToFormat ) )
+    e.g.
+      exampleToFormat = "example number is: {number}"  ## no subs yet
+      number = 1  ## now number is defined, late
+      result = eval( Easy.Fstring( exampleToFormat ) )
 
   Easy.PrintWithFormat .PrintWithFormatV .Format .FormatV  
     r = Easy.PrintWithFormat( exampleToFormat, **locals() )
@@ -84,23 +135,26 @@ Highlights:
     unprinted = Easy.FormatV( exampleToFormat, None, substitutions )
   
   
-  Easy.TrimAndTab(r'''
-      ###
-      First Hashes and lines above and last line
-      are trimmed and unindented.
-      They can end (from a practical perspective)
-      with windows backslashes too!
-      e.g. C:\Windows\
-  ''')  
+    Easy.TrimAndTab(r'''
+        ###
+        First Hashes and lines above and last line
+        are trimmed and unindented, to match first hash's indentation.
+        They can end with backslashes too!
+        Which really helps on for copy pasting literals on Windows
+    ''')
+    # e.g.
+    Easy.TrimAndTab(r'''
+        ###
+        C:\Windows\
+    ''')
 
   
 """
-
-from .Easy import Easy
-from . import Easy as EasyMod
+from . import Utils
+from . import EasyMod
+from .EasyMod import Easy
 SelfMod = __import__(__name__)
 SelfPak = SelfMod ## module is root init itself
-
 
 ## whatto import on: from joecceasy import *
 ##   don't use the others, because they can be

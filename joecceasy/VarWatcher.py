@@ -4,11 +4,15 @@ from .Utils import classproperty
 
 
 class VarWatcher:
-
+    @classproperty
+    def EasyPak(cls):
+        import sys
+        return  __import__(__package__)    ## *** fix this to be relative
+    
     @classproperty
     def EasyMod(cls):
-        import joecceasy
-        return joeccEasy.Easy    ## *** fix this to be relative
+        from . import Easy
+        return Easy    ## *** fix this to be relative
     
     @classproperty
     def Easy(cls):

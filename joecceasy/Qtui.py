@@ -37,10 +37,9 @@ from PySide2.QtWidgets import QWidget, QFormLayout
 SelfPak=__import__(__package__)    
 SelfMod=sys.modules[__name__]
 import joecceasy
+from . import EasyMod
 from . import Easy
-EasyMod = Easy.Mod
-from .Easy import Easy
-assert Easy.LoadingOfSelfModIsComplete==True
+assert EasyMod.EasyModLoadingIsComplete==True
 
 from .Utils import classproperty
 
