@@ -120,7 +120,7 @@ def see(*args, sep=' ', end='\n', **kwargs):
                     assert isinstance(str, argToInsert)
                     argsList.insert(i+1, argToInsert )
                 except:
-                    pass
+                    print( "    Easy.See could not parse expression. Check to ensure it is a string or quoted literal string.    ", end=end)
         i+=1
     return retval
 

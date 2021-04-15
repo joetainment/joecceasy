@@ -1,0 +1,1 @@
+import sys; exec( 'from joecceasy.sitecustomize import joecceasy_sitecustomize' )

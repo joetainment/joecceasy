@@ -317,7 +317,7 @@ class Easy( metaclass=EasyMeta ):
         cls.__ReloadCount = count 
 
     @classproperty
-    def AbsPath(cls, path):
+    def AbsPath(cls):
         return Funcs.AbsPath
             
     
@@ -423,11 +423,11 @@ class Easy( metaclass=EasyMeta ):
     #    return Utils.CaseInsensitiveDict
     
     @classproperty
-    def CiDict(self):
+    def CiDict(cls):
         return Utils.CaseInsensitiveDict
     
     @classproperty
-    def CaseInsensitiveDict(self):
+    def CaseInsensitiveDict(cls):
         return Utils.CaseInsensitiveDict
 
     @classproperty
@@ -537,7 +537,7 @@ class Easy( metaclass=EasyMeta ):
         return cls.Inst.flib
         
     @classproperty
-    def Fstring( cks ):
+    def Fstring( cls ):
         return Funcs.Fstring
     @classproperty
     def Format(cls):
@@ -576,7 +576,7 @@ class Easy( metaclass=EasyMeta ):
         return Funcs.Import
            
     @classproperty
-    def ImportFile( cls, path, asName= None, relativeToScript = "unimplemented" ):
+    def ImportFile( cls ):
         return Funcs.ImportFile
     
     
@@ -584,6 +584,17 @@ class Easy( metaclass=EasyMeta ):
     def IncrementReloadCount(cls): 
         cls.__ReloadCount += 1
         return cls
+    
+    @classmethod
+    def Init0(cls):
+        """
+        Init singleton instance of class without
+        auto chir or auto load code.
+        """
+        cls.Init(
+            shouldAutoChdirToArg0Dir=False, shouldAutoLoadCode=True
+        )
+        return cls.__SingletonInstance
     
     @classmethod
     def Init(cls, 
@@ -716,6 +727,8 @@ class Easy( metaclass=EasyMeta ):
 
     @classproperty
     def ODict(cls, *args,**kargs):
+            ## *args, and **kwargs are defensive
+            ##  might not be needed for this to work
         return Funcs.ODict
 
     @classproperty
@@ -729,7 +742,7 @@ class Easy( metaclass=EasyMeta ):
     #    #if action=='install'
     
     @classproperty
-    def PipInstall( cls, *args,  **kargs ):
+    def PipInstall( cls ):
         return Funcs.PipInstall
     @classproperty
     def Prints(cls):
@@ -738,7 +751,7 @@ class Easy( metaclass=EasyMeta ):
     def PrintLoop(cls):
         return Funcs.PrintLoop
     @classproperty
-    def PrintTail( cls, *args, **kargs ):
+    def PrintTail( cls ):
         return Funcs.PrintTail
         
     @classproperty
@@ -1137,6 +1150,7 @@ class Easy( metaclass=EasyMeta ):
     
     @classmethod
     def Win32GetProcessPriorityById(cls, pid):
+        import subprocess
         cmd = 'wmic process where "ProcessId=' +str(pid) + '" get priority'
         r =  subprocess.check_output( cmd, shell=True )
         rl = r.splitlines()
@@ -1238,7 +1252,8 @@ class Easy( metaclass=EasyMeta ):
     @classmethod
     def Win32GetProcessNameListByName(cls, name):
         wmiProcs = []
-        c = Easy.Mods.wmi.WMI ()
+        import wmi
+        c = wmi.WMI ()
         psList = c.Win32_Process ()
         for iProc in psList:
             if iProc.Name==name:  ##.startswith( "WmiPrvSE"):
@@ -1252,13 +1267,28 @@ class Easy( metaclass=EasyMeta ):
     ##################################
     #### Instance Methods and Properties
     
-    def __init__(self,
+    def __init__(self,*args,
             shouldAutoInit=False,
             shouldAutoChdirToArg0Dir=False,
             shouldAutoLoadCode=False,
             shouldAutoRecode='unimplemented'
         ):
+        """
+        args can be used to override
+            shouldAutoInit=False,
+            shouldAutoChdirToArg0Dir=False,
+            shouldAutoLoadCode=False,
+            easyInst = Easy(1,0,0)
+              ## will auto init but not chdir or load code 
+        """
         import os, sys
+        ## allow some quick overrides of longer options
+        if len(args):
+            shouldAutoInit=bool(args[0])
+            if len(args)>1:
+                shouldAutoChdirToArg0Dir=bool(args[1])
+                if len(args)>2:
+                    shouldAutoLoadCode=bool(args[2])  
         
         self.__shouldAutoInit = shouldAutoInit
         self.__shouldAutoChdirToArg0Dir = shouldAutoChdirToArg0Dir
