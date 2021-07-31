@@ -16,7 +16,7 @@ class JoeccFileRenamer(Easy.Qtui):
     def __init__(
             self,
             *args,
-            title="JoeccFileRenamer",
+            title="EasyFileRenamer",
             showInput=False,
             autoExpandOutput=True,
             useTabs=False,

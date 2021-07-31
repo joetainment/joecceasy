@@ -16,6 +16,7 @@
 import os
 
 from . import Utils
+classproperty = Utils.classproperty
 #from .
 
 #Self
@@ -25,15 +26,14 @@ pjoin = path.join
 pabs = path.abspath
 prel = path.relpath
 
-classproperty = Utils.classproperty
 
 #types = symlink_to_file symlink_to_noexist symlink_to_noaccess symlin
 
 class Entry:
-    def  __init__( self, *args, **kargs ):
+    def  __init__( self, *args, **kwargs ):
         d = self.__dict__
-        for k in kargs:
-            d[k] = kargs[k]
+        for k in kwargs:
+            d[k] = kwargs[k]
     #def isDir(self):
     #def isDirLike(self):
     #    return
@@ -58,7 +58,7 @@ class Walker:
 
   @classmethod
   def Walk( cls, pth, useEmptyStrAsDot=True ):
-    KargsAsObj = Utils.KargsAsObj
+    KwargsAsObj = Utils.KwargsAsObj
     
     if useEmptyStrAsDot and pth=='':
       pth='.'
@@ -149,7 +149,7 @@ class Walker:
 
         #resolved = ''
         #type=''
-        entry = KargsAsObj(
+        entry = KwargsAsObj(
             orig= op,
             abs= ap,
             rel=rp,
@@ -179,7 +179,7 @@ class Walker:
   def wwalk( cls ):
     return cls.Walk
 
-  def __init__(self, *args, **kargs):
+  def __init__(self, *args, **kwargs):
       raise Exception(
           "This class should not ne instantiated, "
           +" it is for static only."

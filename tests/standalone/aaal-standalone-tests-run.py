@@ -12,14 +12,14 @@ testPrefix='test__'
 stdout, stderr = None,None
 outputFh=None
 
-#def msg(*args,**kargs):
-#  print(*args,**kargs)
-def msg( argOutputFh, *args, **kargs):
+#def msg(*args,**kwargs):
+#  print(*args,**kwargs)
+def msg( argOutputFh, *args, **kwargs):
   if not argOutputFh is None:
-    print( *args, file=argOutputFh, **kargs )
+    print( *args, file=argOutputFh, **kwargs )
     argOutputFh.flush()
   else:
-    print( *args, **kargs )
+    print( *args, **kwargs )
 
 if '--output-to-delme-file' in sys.argv:
   doOutput=True

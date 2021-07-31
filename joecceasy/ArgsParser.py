@@ -20,7 +20,7 @@ int kind defaults None
 
         
 addFlag func
-        useful kargs that can be passed:
+        useful kwargs that can be passed:
           help type
 """
 class ArgsParser():
@@ -33,70 +33,70 @@ class ArgsParser():
         return cls.__SingletonInstance
     
     @classmethod
-    def GetFlag(cls,*args,**kargs):
-        r = cls.Get(*args,kind='flag',**kargs)
+    def GetFlag(cls,*args,**kwargs):
+        r = cls.Get(*args,kind='flag',**kwargs)
         assert type(r)==bool
         return r
     @classmethod
-    def GetFloat(cls,*args,**kargs):
-        r = cls.Get(*args,kind='float',**kargs)
+    def GetFloat(cls,*args,**kwargs):
+        r = cls.Get(*args,kind='float',**kwargs)
         assert type(r)==float
         return r
     @classmethod
-    def GetInt(cls,*args,**kargs):
-        r = cls.Get(*args,kind='int',**kargs)
+    def GetInt(cls,*args,**kwargs):
+        r = cls.Get(*args,kind='int',**kwargs)
         assert type(r)==int
         return r
     @classmethod
-    def GetNs(cls,*args,**kargs):
+    def GetNs(cls,*args,**kwargs):
         return cls.Inst.ns
     @classmethod
-    def GetNargs(cls,*args,**kargs):
-        r = cls.Get(*args,kind='nargs',**kargs)
+    def GetNargs(cls,*args,**kwargs):
+        r = cls.Get(*args,kind='nargs',**kwargs)
         assert type(r)==list
         return r
     @classmethod
-    def GetStr(cls,*args,**kargs):
-        r = cls.Get(*args,kind='str',**kargs)
+    def GetStr(cls,*args,**kwargs):
+        r = cls.Get(*args,kind='str',**kwargs)
         assert type(r)==str
         return r
-    def GetExisting(cls, argName, *args,**kargs):
+    def GetExisting(cls, argName, *args,**kwargs):
         if argsParser is None:
             argsParser=cls.Inst
-        return argsParser.get( argName, *args,**kargs)
+        return argsParser.get( argName, *args,**kwargs)
     
     @classmethod
-    def Get( cls, argName, *args, argsParser=None, kind='str',**kargs ):
+    def Get( cls, argName, *args, argsParser=None, kind='str',**kwargs ):
         if kind=="flag":
             default=False
-            if 'default' in kargs:
-                del kargs['default']
+            if 'default' in kwargs:
+                del kwargs['default']
         if kind=="str":
             default=''
-            if 'default' in kargs:
-                default = kargs['default']
-                del kargs['default']
+            if 'default' in kwargs:
+                default = kwargs['default']
+                del kwargs['default']
         if kind=="int":
             default=''
-            if 'default' in kargs:
-                default = kargs['default']
-                del kargs['default']
+            if 'default' in kwargs:
+                default = kwargs['default']
+                del kwargs['default']
         if kind=="nargs":
             ## nargs always overrites default with empty list
             default=[]
-            if 'default' in kargs:
-                del kargs['default']
+            if 'default' in kwargs:
+                del kwargs['default']
         if kind=="float":
             default=''
-            if 'default' in kargs:
-                default = kargs['default']
-                del kargs['default']
+            if 'default' in kwargs:
+                default = kwargs['default']
+                del kwargs['default']
         """
         argName can be int 0 or "0" or 'argsParserPosZero'
         in order gather positional args
         nargs can be used to gather more
         
-        extra args and kargs get passed to python's argumentparser's
+        extra args and kwargs get passed to python's argumentparser's
         add_argument call
         """
         if argsParser is None:
@@ -110,7 +110,7 @@ class ArgsParser():
             else:
                 assert kind!='flag'
                 assert kind=='nargs' ## only str implemented so far                
-                argsParser.addNargs( argName, *args, **kargs)
+                argsParser.addNargs( argName, *args, **kwargs)
                 return argsParser.get( argName )
                 #raise Exception('positional args not implmented yet')
         else:
@@ -122,13 +122,13 @@ class ArgsParser():
                 if True==False:
                     pass
                 elif kind=="int":
-                    argsParser.addInt( dashedArgName, *args, **kargs)
+                    argsParser.addInt( dashedArgName, *args, **kwargs)
                 elif kind=="flag":
-                    argsParser.addFlag( dashedArgName, *args, **kargs)
+                    argsParser.addFlag( dashedArgName, *args, **kwargs)
                 elif kind=="float":
-                    argsParser.addFloat( dashedArgName, *args, **kargs)
+                    argsParser.addFloat( dashedArgName, *args, **kwargs)
                 elif kind=="str":
-                    argsParser.addStr( dashedArgName, *args, **kargs)
+                    argsParser.addStr( dashedArgName, *args, **kwargs)
                 else:
                     raise Exception("this type not yet handled")
                 return argsParser.get( argName )
@@ -151,8 +151,8 @@ class ArgsParser():
             self.reparse()
         return self._unknown
     
-    def addStr(self, argName, *args, **kargs):
-        if 'action' in kargs:
+    def addStr(self, argName, *args, **kwargs):
+        if 'action' in kwargs:
             Exception(
                 "Don't specify action, this func forces it to be 'store'"
             )
@@ -161,13 +161,13 @@ class ArgsParser():
         assert argName not in self.dictOfAlreadyAdded
         self.parser.add_argument( argName, *args,
             action="store", type=str, default='',
-            **kargs
+            **kwargs
         )
         self.dictOfAlreadyAdded[argName]=True
         self.needsReparse=True
         
-    def addNargs(self, argName, *args, **kargs):
-        if 'action' in kargs:
+    def addNargs(self, argName, *args, **kwargs):
+        if 'action' in kwargs:
             Exception(
                 "Don't specify action, this func forces it to be 'store'"
             )
@@ -176,12 +176,12 @@ class ArgsParser():
         assert argName not in self.dictOfAlreadyAdded
         self.parser.add_argument( argName, *args,
             action="extend", nargs='+', type=str, default=[],
-            **kargs
+            **kwargs
         )
         self.dictOfAlreadyAdded[argName]=True
         self.needsReparse=True
-    def addFloat(self, argName, *args, **kargs):
-        if 'action' in kargs:
+    def addFloat(self, argName, *args, **kwargs):
+        if 'action' in kwargs:
             Exception(
                 "Don't specify action, this func forces it to be 'store'"
             )
@@ -190,12 +190,12 @@ class ArgsParser():
         assert argName not in self.dictOfAlreadyAdded
         self.parser.add_argument( argName, *args,
             action="store", type=float, default='',
-            **kargs
+            **kwargs
         )
         self.dictOfAlreadyAdded[argName]=True
         self.needsReparse=True
-    def addInt(self, argName, *args, **kargs):
-        if 'action' in kargs:
+    def addInt(self, argName, *args, **kwargs):
+        if 'action' in kwargs:
             Exception(
                 "Don't specify action, this func forces it to be 'store'"
             )
@@ -204,13 +204,13 @@ class ArgsParser():
         assert argName not in self.dictOfAlreadyAdded
         self.parser.add_argument( argName, *args,
             action="store", type=int, default='',
-            **kargs
+            **kwargs
         )
         self.dictOfAlreadyAdded[argName]=True
         self.needsReparse=True
                 
-    def addFlag(self, argName, *args, **kargs):
-        if 'action' in kargs:
+    def addFlag(self, argName, *args, **kwargs):
+        if 'action' in kwargs:
             Exception(
                 "Don't specify action, this func forces it to be 'store_true'"
             )        
@@ -220,7 +220,7 @@ class ArgsParser():
         #print(f"adding flag: {argName}")
         self.parser.add_argument( argName, *args,
                         action="store_true", default=False,
-                        **kargs )
+                        **kwargs )
         self.dictOfAlreadyAdded[argName]=True
         self.needsReparse=True
         
@@ -229,8 +229,8 @@ class ArgsParser():
             argName='argsParserPosZero'
         return getattr( self.ns, argName )
     
-    def reparse(self,*args,**kargs):
-            ns, unknown = self.parser.parse_known_args( *args, **kargs )
+    def reparse(self,*args,**kwargs):
+            ns, unknown = self.parser.parse_known_args( *args, **kwargs )
             self._ns=ns
             self._unknown=unknown
             self.needsReparse = False                  

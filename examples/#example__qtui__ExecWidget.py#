@@ -1,0 +1,52 @@
+from joecceasy import Easy
+
+Easy.Qtui.CreateApp().ExecWidget( Easy.Qtw.QLabel("Widget Made By One Liner") )
+
+
+Easy.Qtui.CreateApp()
+widget  = Easy.Qtw.QPushButton("Widget Made Directly")
+widget.setStyleSheet( 'font: 30pt sans')
+Easy.Qtui.ExecWidget( widget )
+
+
+
+def makeWidget():
+    global widget ## this is just so it can be shared with onExec
+    widget  = Easy.Qtw.QPushButton("Widget Made By Function")
+    widget.setStyleSheet( 'font: 40pt mono')
+    return widget
+
+def onExec( ):
+    global widget
+    Easy.Qtc.QTimer.singleShot(
+        1000,
+        lambda:            
+            widget.setStyleSheet(
+                'font: 50pt serif'
+            )
+    )
+Easy.Qtui.CreateApp()
+Easy.Qtui.ExecWidget( makeWidget, onExec=onExec )
+
+class MyWidgetClass(Easy.Qtw.QPushButton):
+    def __init__(self):
+        super().__init__()
+        self.toggle=True
+        self.setStyleSheet( 'font: 40pt sans')
+        self.setText( "Widget Made By Class" )
+        self.tickTimer = Easy.Qtc.QTimer( )
+        self.tickTimer.start( 250 )
+        self.tickTimer.timeout.connect( self.onTick )
+    def onExec(self):
+        self.setStyleSheet( "background: white" )
+    def onTick(self):
+        if self.toggle:
+            self.setStyleSheet('color: red')
+        else:
+            self.setStyleSheet('color: blue')
+        self.toggle = not self.toggle
+
+Easy.Qtui.CreateApp()
+Easy.Qtui.ExecWidget( MyWidgetClass, onExec=True )
+
+

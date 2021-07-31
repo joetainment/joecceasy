@@ -114,8 +114,8 @@ class EasyThread(KThread):
                 *self._args,
                 **self._kwargs
             )
-    def join(self, *args, **kargs):
-        super().join( *args, **kargs )
+    def join(self, *args, **kwargs):
+        super().join( *args, **kwargs )
         return self._return
     
 '''    

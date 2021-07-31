@@ -3,7 +3,7 @@ from joecceasy import Easy
 Easy.Init()
 
 ## This shows a subclass with simple init args
-## when we don't nee to pass through *args or **kargs
+## when we don't nee to pass through *args or **kwargs
 class MyQtui(Easy.Qtui):
     def __init__(
             self,

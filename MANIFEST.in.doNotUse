@@ -1,0 +1,6 @@
+include README.md
+recursive-include joecceasy/submodules *
+recursive-include joecceasy/apps *
+recursive-exclude __pycache__ *
+recursive-exclude *gitignore* *
+exclude *gitignore*

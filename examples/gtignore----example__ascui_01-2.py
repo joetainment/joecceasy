@@ -17,8 +17,8 @@ Easy.Ascui(title='Ascui Examples Step 1 of 2', quitLabel="Next").exec_()
 
 ## Second one, via, customized subclass
 class ExampleAscui( Easy.Ascui ):
-    def __init__(self,*args,**kargs):
-        super().__init__(*args,**kargs)
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args,**kwargs)
     def initWidgets(self):
         self.frame.createWidget("Text", "MyText", "My Text" )
         self.frame.createWidget("Divider", "Divider01", None, height=3 )

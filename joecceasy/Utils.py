@@ -16,6 +16,18 @@ pretty much everything done in this file is done inside
 of the functions or classes. Global vars set are only
 UtilsModLoadingIsComplete and a bunch of aliases
 for the functions and classes
+
+todo:
+  map like features but made easier and clearer for instances
+    getattr type calls working on instance methods by string name
+    (mostly already done now)
+  zip like features but made easier and clearer
+    employee_names, employee_numbers = zip(*employees_zipped)
+    #--and-#
+    for name, number in zip(employee_names, employee_numbers):
+        print(name, number)
+        
+
 """
 ## Here we explicitly do not import anything
 ## immediately. Not builtins, and nothing
@@ -162,11 +174,11 @@ Classmethod=classmethod
 class Object(object):
     pass
 
-class KargsAsObj(object):
-    def  __init__( self, *args, **kargs ):
+class KwargsAsObj(object):
+    def  __init__( self, *args, **kwargs ):
         d = self.__dict__
-        for k in kargs:
-            d[k] = kargs[k]
+        for k in kwargs:
+            d[k] = kwargs[k]
 
 class EasyReturnedTimeout:
     def __str__(self):
@@ -185,6 +197,7 @@ class EasyExplicitUnsetKwarg:
     unset
     """
     pass
+
     
 
 class FunctionLibrary( ):
@@ -239,9 +252,10 @@ class CaseInsensitiveDict(dict):
 class Funcs(object):
     """
     Stateless functions that don't depend on anything in Easy class,
-    but that may depend on each other, and Utils raw funs,
+    but that may depend on each other, and Utils raw funcs,
     or anything else imported into this Utils mod!
-    Generally,this is all stuff that should rely on any
+
+    Generally,this is all stuff that should not rely on any
     potentially cyclic or complex imports.
     """
     ## todo *** add options for including arbitrary pre and post lists
@@ -250,6 +264,137 @@ class Funcs(object):
     def AbsPath(cls, path):
         import os
         return os.path.abspath(path)
+    
+    @classmethod
+    def AnyStartsWithAny(cls, haystackIter, needlesIter ):
+        wasFound=False
+        doBreak=False
+        #print( haystackIter)
+        #print( needlesIter)
+        for h in haystackIter:
+            #print( needlesIter)
+            for n in needlesIter:
+                #print( f'h: {h}  n: {n}')
+                if h.startswith( n ):
+                    doBreak=True
+                    wasFound=True
+                if doBreak:
+                    break
+            if doBreak:
+                break
+        return wasFound
+    
+    @classmethod
+    def AnyEndsWithAny(cls, haystackIter, needlesIter ):
+        wasFound=False
+        doBreak=False
+        #print( haystackIter)
+        #print( needlesIter)
+        for h in haystackIter:
+            #print( needlesIter)
+            for n in needlesIter:
+                #print( f'h: {h}  n: {n}')
+                if h.endswith(n):
+                    doBreak=True
+                    wasFound=True
+                if doBreak:
+                    break
+            if doBreak:
+                break
+        return wasFound
+
+    @classmethod
+    def AnyEqualsAny( cls, haystackIter, needlesIter ):
+        wasFound=False
+        doBreak=False
+        #print( haystackIter)
+        #print( needlesIter)
+        for h in haystackIter:
+            #print( needlesIter)
+            for n in needlesIter:
+                #print( f'h: {h}  n: {n}')
+                if h == n:
+                    doBreak=True
+                    wasFound=True
+                if doBreak:
+                    break
+            if doBreak:
+                break
+        return wasFound
+        
+    @classmethod
+    def AnyFuncOnAny( cls, haystackIter, needlesIter, func ):
+        raise "not implemented"
+    
+    @classmethod
+    def AnyOnAny( cls, haystackIter, needlesIter, funcOrFuncName ):
+        if callable(funcOrFuncName):
+            return cls.AnyOnAnyByFunc(
+                haystackIter, needlesIter, funcOrFuncName )
+        else:
+            return cls.AnyOnAnyByMethod(
+                haystackIter, needlesIter, funcOrFuncName )
+            
+    @classmethod
+    def AnyOnAnyByFunc( cls, haystackIter, needlesIter, func, swap=False ):
+        """
+        swap will swap the order of haystack and needle in the function call
+        """
+        ## disabled, doing at function call avoids immutable dups
+        #if swap:
+        #    haystackIter, needlesIter = needlesIter, haystackIter
+        wasFound=False
+        doBreak=False
+        for h in haystackIter:
+            for n in needlesIter:
+                if swap:
+                    test = func( h, n )
+                else:
+                    test = func( n, h )
+                if test:
+                    doBreak=True
+                    wasFound=True
+                if doBreak:
+                    break
+            if doBreak:
+                break
+        return wasFound
+    
+    @classmethod
+    def AnyInAny( cls, needlesIter, haystackIter ):
+        wasFound=False
+        doBreak=False
+        #print( haystackIter)
+        #print( needlesIter)
+        for h in haystackIter:
+            #print( needlesIter)
+            for n in needlesIter:
+                #print( f'h: {h}  n: {n}')
+                if n in h: ## note, 'in' order opposite of most funcs
+                    doBreak=True
+                    wasFound=True
+                if doBreak:
+                    break
+            if doBreak:
+                break
+        return wasFound
+        
+    @classmethod
+    def AnyHaveAnyIn( cls, haystackIter, needlesIter ):
+        """
+        Same as AnyInAny but order of args are swapped
+        so that the order matches the more common function calling order
+        where haystack is given before needle
+        """
+        return cls.AnyInAny( needlesIter, haystackIter )
+    
+    
+        #if useSets:
+        #    it = set( haystackIter ).intersect( needlesIter )
+        #    return bool( it ))
+        #else:    
+    
+    
     
     @classmethod
     def AppendOrConcatWithLastStr( cls, ls, s ):
@@ -402,8 +547,8 @@ class Funcs(object):
 
 
     @classmethod
-    def DirToObj(cls, obj, *args, **kargs ):
-        d = cls.Dir( obj, *args, **kargs )
+    def DirToObj(cls, obj, *args, **kwargs ):
+        d = cls.Dir( obj, *args, **kwargs )
         newObj = Object()
         for k in d:
             v = getattr( obj, k )
@@ -411,47 +556,86 @@ class Funcs(object):
         return newObj
 
     @classmethod
+    def DictCopyExclusive( cls, dictToCopy, keysToExcludeIterable ):
+        print( keysToExcludeIterable )
+        try:
+            copy = dictToCopy.copy()
+            for key in keysToExcludeIterable:
+                del copy[key]
+        except Exception as e:
+            raise type(e)(
+                str(e)
+                + "      obj is not iterable (or is accidentally a str or bytes, and may need to be split to list)"
+            )
+        return copy
+            
+                               
+                               
+    @classmethod
     def DictOfDefaultsOntoObj( cls,
-            obj, defaultsDict=None, attrDict=None,
+            obj, defaultsDict=None, attrDict=None, attrOnlySelfDict=None,
             fallbacks=False,
             replaceDictNones=True, ## allow replacing existing keys if they are None
             insertNewNones=True, ## allow inserting new attr even if they are None
+            filterInput=None,
+            filterOutput=None,
+            modifyOriginal=True,
         ):
         ## *** todo - could add option to store
         ## entriesToApply on an obj attr
         
+        
+        
         if attrDict==None:
             attrDict={}
+        
+        if filterInput is not None:
+            attrDictFiltered = attrDict.copy()
+            for key in tuple( attrDictFiltered.keys() ):
+                if not key in filterInput:
+                    del attrDictFiltered[key]
+        else:
+            attrDictFiltered = attrDict
+                
+        
         
         simpleCase = (
             defaultsDict==None and
             replaceDictNones and
             insertNewNones
         ) 
+                
         
         if simpleCase:
-            for k,v in attrDict.items():
-                obj.setattr( k, v )
+            for k,v in attrDictFiltered.items():
+                setattr( obj, k, v )
         elif defaultsDict==None:
-            for k,v in attrDict.items():
+            for k,v in attrDictFiltered.items():
                 if insertNewNones:
-                    obj.setattr( k, v )
+                    setattr( obj, k, v )
+        ## this one will modify input dict, 
         else:
             #print( fallbacks )
             entriesToApply = cls.DictOfDefaultsOntoDict(
                 defaultsDict,
-                attrDict,
+                attrDictFiltered,
                 replaceDictNones=replaceDictNones,
                 insertNewNones=insertNewNones,
                 fallbacks=fallbacks,
+                modifyOriginal=modifyOriginal,
             )
             
+            if filterOutput is not None:
+                for key in tuple( entriesToApply.keys) :
+                    if not key in filterOutput:
+                        del entriesToApply[key] 
+            
             if insertNewNones==True:
-                for k,v in entriesToApply.items():
-                    setattr( obj, k, v )            
+                for k,v in entriesToApply.items(): 
+                        setattr( obj, k, v )            
             else:
                 for k,v in entriesToApply.items():
-                    if v!=None:
+                    if v is not None:
                         setattr( obj, k, v )            
             #for k in specifiedDict: 
             #    if k in entriesToApply:
@@ -470,11 +654,18 @@ class Funcs(object):
     @classmethod
     def DictOfDefaultsOntoDict(cls,
         defaultsDict, destDict,
-        fallbacks=False,
+        fallbacks=False,  ## don't usee values in default dict directly,
+                          ## instead treat them as lists and take first non none
         replaceDictNones=True, ## allow replacing existing keys if they are None
         insertNewNones=True, ## allow inserting new attr even if they are None
         returnIncludingAlreadyExisting=True,
+        filterInput=None,
+        modifyOriginal=True,
+        returnDestDict=False,
         ):
+        
+        if not modifyOriginal:
+            destDict = destDict.copy()
         
         entriesToApply = { }
         entriesAlreadyExisting = { }
@@ -513,18 +704,44 @@ class Funcs(object):
                 if destValue!=None or insertNewNones==True: 
                     entriesToApply[defaultEntryName]=destValue
 
+
+
+        if filterInput is not None:
+            keys = entriesToApply.keys()            
+            for k in keys:
+                if not k in filterInput:
+                    del entriesToApply[key]
+                    
         for k,v in entriesToApply.items():
+            if filterInput is not None:
+                if not k in filterInput:
+                    continue
             destDict[ k ] = v
         
         #print( fallbacks )
         #print( defaultsDict )
         
-        if returnIncludingAlreadyExisting:
-            returnDict = { **entriesAlreadyExisting, **entriesToApply }
+        
+        if returnDestDict:
+            return destDict
         else:
-            returnDict = entriesToApply
+            if returnIncludingAlreadyExisting:
+                returnDict = { **entriesAlreadyExisting, **entriesToApply }
+            else:
+                returnDict = entriesToApply
+                    
+            return returnDict
 
-        return returnDict        
+
+    @classmethod
+    def DictOfDefaultsOntoDictWithBackup(cls, *args, **kwargs):
+        defaultsDict = args[0]  ## first required arg of func we'll call
+            #kwargs.get( 'defaultsDict', {} )
+        #if defaultsDict is not {}:
+        backup = defaultsDict.copy()
+        #else:
+        #    backup = None
+        return backup, cls.DictOfDefaultsOntoDict( *args, **kwargs )
 
     @classmethod
     def EnumArgs(cls):
@@ -565,7 +782,11 @@ class Funcs(object):
         finally:
             del frame
         return retVal
-          
+
+    @classmethod
+    def Exit(cls, *args, **kwargs):
+        import sys
+        sys.exit(*args, **kwargs)          
 
     @classmethod
     def ExtendBuiltinClass(cls, clsToExtend, callFunc, callName=None ):
@@ -605,13 +826,13 @@ class Funcs(object):
     
     
     @staticmethod
-    def Format( *args, **kargs ):
+    def Format( *args, **kwargs ):
         args=list(args)
         hasError=False
         if args!=None:
             if len(args)>0:
                 string0=args.pop(0)
-                return string0.format( *args, **kargs )
+                return string0.format( *args, **kwargs )
             else:
                 hasError=True
         else:
@@ -620,18 +841,19 @@ class Funcs(object):
             raise TypeError( "string required as first argument to this Format function" )
 
     @staticmethod
-    def FormatV( string0, args=None, kargs=None ):
+    def FormatV( string0, args=None, kwargs=None ):
         if args==None:
             args=[]
-        if kargs==None:
-            kargs={}
-        #print(kargs)
-        return string0.format( *args, **kargs )
+        if kwargs==None:
+            kwargs={}
+        #print(kwargs)
+        return string0.format( *args, **kwargs )
     
     @classproperty
     def Frame(cls):
         import inspect
         return inspect.currentframe
+    
     @classmethod
     def FromFrame(cls, frame, kind=None):
         """
@@ -719,6 +941,11 @@ class Funcs(object):
             result.append (i)
         return result    
 
+    @classmethod
+    def Glob(cls, *args, **kwargs):
+        import glob
+        return glob.glob( *args, **kwargs )    
+
     @classproperty
     def Ic(cls):
         return ic ## func in this module root namespace    
@@ -742,6 +969,7 @@ class Funcs(object):
 
     @classmethod
     def JoinDirFileExt(cls, dir, fbname, ext ): #cleanTrailingSlashes=False):
+        import os
         fname = fbname + ext
         return os.path.join( dir, fname )  #*[dir, fname]
         
@@ -798,12 +1026,26 @@ class Funcs(object):
                 'pass'
         return cls.NowLocal().strftime(fmt)[:22]  ## todo  fix this
 
-    @classmethod
-    def ODict(cls, *args,**kargs):
-        return collections.OrderedDict( *args, **kargs )
+    @classproperty
+    def ODict(cls):
+        import collections
+        return collections.OrderedDict
+
+
+    @classproperty
+    def OntoDict(cls):
+        return cls.DictOfDefaultsOntoDict
+    
+    @classproperty
+    def OntoDictWithBackup(cls):
+        return cls.DictOfDefaultsOntoDictWithBackup
+    
+    @classproperty
+    def OntoObj(cls):
+        return cls.DictOfDefaultsOntoObj
     
     @classmethod
-    def PipInstall( cls, *args,  **kargs ):
+    def PipInstall( cls, *args,  **kwargs ):
         import subprocess, sys
         pkgList = []
         for arg in args:
@@ -867,30 +1109,30 @@ class Funcs(object):
     
     
     @classmethod
-    def PrintTail( cls, *args, **kargs ):
+    def PrintTail( cls, *args, **kwargs ):
         """
         Print the last n lines of each argument.
         
         Can pass
         """
-        tailsep = kargs.get( 'tailsep', '\n\n' )
-        asList = kargs.get( 'asList', None )        
+        tailsep = kwargs.get( 'tailsep', '\n\n' )
+        asList = kwargs.get( 'asList', None )        
 
-        kargs['asList']=True ## set option for call to cls.Tail
-        tails = cls.Tail( *args, **kargs )
+        kwargs['asList']=True ## set option for call to cls.Tail
+        tails = cls.Tail( *args, **kwargs )
         
 
-        ## prep kargs for print
-        kargs.pop( 'tailsep', None )
-        kargs.pop( 'asList', None )
-        kargs.pop( 'n' )
+        ## prep kwargs for print
+        kwargs.pop( 'tailsep', None )
+        kwargs.pop( 'asList', None )
+        kwargs.pop( 'n' )
         
         ##print them
         for i,t in enumerate(tails):
             if tailsep!=None:
                 if i>0:
                     print( tailsep, end='' )
-            print( t, **kargs )
+            print( t, **kwargs )
                 
         if asList:
             return tails
@@ -964,18 +1206,18 @@ class Funcs(object):
             del frame
         
     @classmethod
-    def PrintWithFormat( cls, string0, *args, **kargs ):
+    def PrintWithFormat( cls, string0, *args, **kwargs ):
         """
         Print and formats a single given string argument.
         Other arguments will be passed to format function.
         """
-        s = cls.Format( string0, *args,**kargs)
+        s = cls.Format( string0, *args,**kwargs)
         print(s)
         return s
     
     @classmethod
-    def PrintWithFormatV( cls, string0, args=None, kargs=None, sep=' ', end='\n' ):
-        s = cls.FormatV(string0,  args, kargs )
+    def PrintWithFormatV( cls, string0, args=None, kwargs=None, sep=' ', end='\n' ):
+        s = cls.FormatV(string0,  args, kwargs )
         print(s, sep=sep, end=end )
         return s
               
@@ -1024,9 +1266,35 @@ class Funcs(object):
         return see  ## function is this modules root namespace
 
     @classmethod
-    def Sleep(cls, *args, **kargs ):
+    def Sleep(cls, *args, **kwargs ):
         import time
-        return time.sleep( *args, **kargs )
+        return time.sleep( *args, **kwargs )
+    
+    @classmethod
+    def TmpDir(cls, *args, **kwargs):
+        import tempfile
+        return tempfile.mkdtemp( *args, **kwargs )
+    
+    @classmethod
+    def TmpDirContext(cls, *args, **kwargs):
+        """
+        warning, this offers no way to set delete=False
+        can cause a weird recursion depth problem on sys exit
+        when it can't delete the file
+        and exceptions can trigger more exceptions
+        """
+        import tempfile
+        return tempfile.TemporaryDirectory( *args, **kwargs )
+    
+    @classmethod
+    def TmpFile(cls, *args, **kwargs):
+        import tempfile
+        return tempfile.mkstemp( *args, **kwargs )
+    
+    @classmethod
+    def TmpFileContext(cls, *args, **kwargs):
+        import tempfile
+        return tempfile.NamedTemporaryFile( *args, **kwargs )
     
     @classmethod
     def Traceback(cls):
@@ -1063,6 +1331,7 @@ class Funcs(object):
         
     @classmethod
     def TzOff(cls):
+        import datetime
         now=datetime.datetime.now()
         utcnow=datetime.datetime.utcnow()
         offset=now - utcnow
@@ -1070,6 +1339,7 @@ class Funcs(object):
 
     @classmethod
     def TzLocal(cls):
+        import datetime
         return datetime.timezone( cls.TzOff() )        
  
     @classmethod

@@ -1,7 +1,11 @@
 r"""
 joecceasy python package __init__.py
 
-For prototyping and short scripts without boiler plate code!
+Make Python Easy
+
+This module, "joecceasy", is for prototyping,
+early learning, and writing short scripts
+without boiler plate code!
 Remember, joecceasy is intentionally non-pythonic and 
 does not follow "best practices", but it "gets it done quick".
 
@@ -125,12 +129,12 @@ Highlights:
     r = Easy.PrintWithFormat( exampleToFormat, number=2 )
     number = 3
     ## alternate methods of doing the same, with optional end
-    r = Easy.PrintWithFormatV( exampleToFormat, kargs=locals(), end='\n\n\n' )
+    r = Easy.PrintWithFormatV( exampleToFormat, kwargs=locals(), end='\n\n\n' )
     # we don't have to print the results
     unprinted = Easy.Format( exampleToFormat, number=4 )
     # or
     substitutions={ 'number': 5}
-    unprinted = Easy.FormatV( exampleToFormat, kargs=substitutions )
+    unprinted = Easy.FormatV( exampleToFormat, kwargs=substitutions )
     # or without, keyword arguments
     unprinted = Easy.FormatV( exampleToFormat, None, substitutions )
   
@@ -150,15 +154,36 @@ Highlights:
 
   
 """
+__version__ = "0.0.1rc1"
+__author__ = 'Joseph Cameron Crawford (Joe)'
+__credits__ = 'Joetainment, Joecc'
+
 from . import Utils
 from . import EasyMod
 from .EasyMod import Easy
+
+
 SelfMod = __import__(__name__)
 SelfPak = SelfMod ## module is root init itself
 
-## whatto import on: from joecceasy import *
-##   don't use the others, because they can be
-##   accessed through 'easy'
-# ,'SelfMod','SelfModule','SelfPak','SelfPackage']
+Ez = Easy
+ez = Easy
+
+tt = Easy.TrimAndTab
+TT = tt
+Tt = tt
+
+Tl = Easy.TrimLines
+TL = Tl
+tl = Tl
+
+## make it easy to make exit work in scripts
+exit = Easy.Exit
+Exit = exit
 
 __all__ = ['Easy']
+    ## whatto import on: from joecceasy import *
+    ##   don't use the others, because they can be
+    ##   accessed through 'easy'
+    # ,'SelfMod','SelfModule','SelfPak','SelfPackage']
+

@@ -28,7 +28,17 @@ provided in callback dict
 '''
 
 import os, sys
-from PySide2.QtWidgets import QWidget, QFormLayout
+
+import PySide2
+import PySide2.QtGui as QtGui
+import PySide2.QtWidgets as QtWidgets
+import PySide2.QtCore as QtCore
+
+Qtc = QtCore
+Qtw = QtWidgets
+Qtg = QtGui
+
+
 
 ## Get self mod and package __init__ mod (joecceasy modules)
 ## It is safe to get this without circular import problems
@@ -36,39 +46,179 @@ from PySide2.QtWidgets import QWidget, QFormLayout
 ## joecceasy module is fully loadedimport sys  ## just for SelfMod/SelfPak most imports later section
 SelfPak=__import__(__package__)    
 SelfMod=sys.modules[__name__]
-import joecceasy
+joecceasy = SelfPak
+from . import Utils
+from .Utils import classproperty
 from . import EasyMod
 from . import Easy
+
 assert EasyMod.EasyModLoadingIsComplete==True
 
-from .Utils import classproperty
 
-try:
-    import PySide2
-except:
-    QtGui = None
-    print(  Mod_traceback.format_exc()  )
-try:
-    import PySide2.QtGui as QtGui
-except:
-    QtGui = None
-    print(  Mod_traceback.format_exc()  )
-try:
-    import PySide2.QtWidgets as QtWidgets
-except:
-    QtWidgets = None
-    print(  Mod_traceback.format_exc()  )  
 
-try:
-    import PySide2.QtCore as QtCore
-except:
-    QtCore = None
-    print(  Mod_traceback.format_exc()  )  
 
-Qtc = QtCore
-Qtw = QtWidgets
-Qtg = QtGui
+                
+class KbEventFilterer(Qtc.QObject):
+    """
+    optimize wasted effort when using this class by specifying on=press/release/shortcut
+    and watched keys  watched=['k','l']
+    """
+    def __init__( self, *args, **kwargs ):
+        
+        on=kwargs.get('on','release')
+        target = kwargs.get('target',None)
+        self.callback = kwargs.get( 'callback',None )
+        self.watched = kwargs.get('watched', [ ] )  ## uses unmodified keys, e.g. no "+" or ":"
+        self.watchCase = False   ## currently disabled due to ctrl bug
+            #kwargs.get('watchCase', False )  ## related code commented out below
+            
+        super().__init__( )  ## not needed #*args,**kwargs
+        
 
+        onRelease= 'release' in on
+        onPress = 'press' in on
+        onShortcut = 'shortcut' in on
+        
+        self.onlyOnTypes=[]
+        if onRelease:
+            self.onlyOnTypes.append( QtCore.QEvent.Type.KeyRelease )
+        if onPress:
+            self.onlyOnTypes.append( QtCore.QEvent.Type.KeyPress )
+        if onShortcut:
+            self.onlyOnTypes.append( QtCore.QEvent.Type.Shortcut )
+            
+        if target is not None:
+            target.installEventFilter( self )
+    
+    def eventFilter(self, obj, event):
+        
+        ## possible types:
+        ##  ShortcutOverride  KeyPress  KeyRelease 
+        if not isinstance( event, Qtg.QKeyEvent ):
+            return False
+        
+        ## We now know it's a key event so we can get the key
+        key = event.key()
+        modifiers = int( event.modifiers() )
+
+        #Qtc.QEvent.Type.KeyRelease
+        if not event.type() in self.onlyOnTypes:
+            return False
+        
+        if key==16777249 or key==16777251 or key==16777248 or key==16777250:
+            return False  ## this is just an optmized version of below
+        
+        ## simple early bail if key not watched, ignores letter case
+        ##     and modifiers
+        qksNoMods = Qtg.QKeySequence( key )
+        qsNoMods = qksNoMods.toString()
+        if len(self.watched) > 0:
+            if not qsNoMods.lower() in [ w.lower() for w in self.watched ]:
+                return False
+            
+        ## this won't work due to bug when holding ctrl, text() returns useless info
+        #text = event.text()
+        #print(text)
+        #textLower = text.lower()
+        #print(textLower)
+        #if len(self.watched) > 0:
+        #    if not textLower in [ w.lower() for w in self.watched ]:
+        #       return False
+        
+        
+        key = event.key()
+        modifiers = event.modifiers()
+        
+        ## had to manually figure these out via testing
+        ## qt seems to get special events for when it's only a modifier
+        intOnlyCtrl = 16777249
+        intOnlyAlt =  16777251
+        intOnlyShift = 16777248
+        intOnlyMeta = 16777250
+        modOnlyCodes = [intOnlyCtrl,intOnlyAlt,intOnlyShift,intOnlyMeta]
+        
+        if key in modOnlyCodes:
+            return False
+        
+        intCtrl  = int(Qtc.Qt.CTRL)  #67108864
+        intAlt   = int(Qtc.Qt.ALT) #134217728
+        intShift = int(Qtc.Qt.SHIFT) #33554432
+        intMeta = int(Qtc.Qt.META) # ?
+        modCodes = [intCtrl,intAlt,intShift,intMeta]
+        
+        if key in modCodes:
+            return False        
+        
+        
+        
+        qks = Qtg.QKeySequence(    key | modifiers    )        
+        qs = qks.toString()
+
+        
+        
+
+        ## More detailed case sensitive letter watching
+        ## disabled for now because it was buggy with ctrl
+        #if len(self.watched) > 0:
+        #    if self.watchCase:
+        #        if not t in self.watched:
+        #           return False
+        
+
+
+        
+        
+        intMods=modifiers
+        
+        andedCtrl =  intMods & intCtrl
+        andedAlt =   intMods & intAlt
+        andedShift = intMods & intShift
+        andedMeta = intMods & intMeta
+        
+        hasCtrl =    andedCtrl != 0
+        hasAlt =     andedAlt != 0
+        hasShift =   andedShift != 0
+        hasMeta =   andedMeta != 0
+        
+        
+        ## ignores different keyboard pluses
+        ## always uses shift=  never actual plus
+        ## treat plus as special, won't work with unmodified plus such as other keyboards
+        
+        qsEscaped = qs.replace('++', '+=') if 'shift' in qs.lower() else qs.replace('++','+Shift+=')
+        ## because Num will be in qs if
+        qsEscaped = qsEscaped.replace( "Num+", "" )
+        qsl = qsEscaped.lower().split('+')
+        qsl=list( sorted(qsl,key=len) )
+        #print(  qsl  )
+        
+        #print( qks, " ", hasCtrl, hasAlt, hasShift )
+        #print( qksNoMods, " ", hasCtrl, hasAlt, hasShift )
+        #print( qsNoMods )
+        #print( qs )
+        #    print( event.text().lower(), " ", event.modifiers )
+        
+
+        class EasyQKeyEvent:
+            'pass'
+        info = EasyQKeyEvent()
+        info.qs = qs
+        info.qks = qks
+        info.keys = qsl
+        info.key = key
+        info.hasCtrl=hasCtrl
+        info.hasAlt=hasAlt
+        info.hasShift=hasShift
+        info.hasMeta=hasMeta
+        info.typ=str( event.type() ).split('.')[-1].lower().replace('key','')
+        info.keys.append( info.typ )
+        
+        
+        if callable( self.callback):
+            return self.callback( obj, event, info )
+        else:
+            return False
+        
 
 class WidgetRecipe():
     def __init__(self, label, connections=None, name=None, kind='button',
@@ -99,27 +249,38 @@ class WidgetRecipe():
         self.name = name
         self.func = func
         self.layout = layout
-        
 
 
-class QtuiMeta( type ):
-    @property
+
+class QtuiFuncs( ):
+
+    @classmethod
+    def GetQapp(cls, argv=None, ignoreArgvError=False ):
+        existingQapp = Qtw.QApplication.instance()
+        if existingQapp:
+            if not ignoreArgvError:
+                assert argv==None  ## we can't share qapp if giving custom args
+            return existingQapp
+        else:
+            if argv==None:
+                argv = sys.argv.copy()
+            qapp = Qtw.QApplication( argv )
+            return qapp
+
+    @classproperty
     def Qapp(cls):
         return cls.GetQapp()
 
-class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
-    
-    __QappSingleton = None
     @classproperty
-    def WidgetRecipe(cls):
-        return WidgetRecipe
+    def KbEventFilterer(cls):
+        return KbEventFilterer
 
     @classproperty
     def Qtc(cls):
-        return QtCore
+        return Qtc
     @classproperty
     def QtCore(cls):
-        return QtCore    
+        return Qtc    
     @classproperty
     def Qtg(cls):
         return QtGui
@@ -128,41 +289,85 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         return QtGui
     @classproperty
     def Qtw(cls):
-        return QtWidgets
+        return Qtw
     @classproperty
     def QtWidgets(cls):
-        return QtWidgets
-
-    @classproperty
-    def Qapp(cls):
-        return cls.GetQapp()
+        return Qtw
     
     @classproperty
     def SelfMod(cls):
         return SelfMod
+    
+    @classmethod
+    def ExecWidget(cls, widgetOrGetter, onExec=None, autoShow=True ):  #args, kwargs=None):
+        """
+        reeturns an object with info
+          .app .widget .returnCode
         
-    @classmethod
-    def Exec(cls, *args, **kargs):
-        qtui = cls( *args, **kargs )
-        return qtui.exec_()
+        does a simple exec of qapp using the widget
+        as root. If widget is class or func, call
+        it to make Widget
+        running the widget creation function
+        
+        widget getter should be a function or class
+        that when called returns one widget
+        """
+        import types
+        #Utils.Object()
+        execInfo = types.SimpleNamespace()
+        
+        execInfo.qapp = Qtw.QApplication.instance()
+        if execInfo.qapp==None:
+            execInfo.qapp = Qtw.QApplication( Easy.Argv )
+        #cls.GetQapp() ## should use override if available
+        
+        
+        ## assign, get, or create our widget
+        if isinstance( widgetOrGetter,  Qtw.QWidget ):
+            execInfo.widget = widgetOrGetter
+        else:
+            execInfo.widget = widgetOrGetter()
+            
+        ## apply onExec function if wanted    
+        if onExec is not None:
+            if onExec==True:
+                Qtc.QTimer.singleShot(0, execInfo.widget.onExec)
+            elif isinstance( onExec, str ):
+                def runOnExecByStr(onExec):
+                    foundFuncByStr = getattr( execInfo.widget, onExec )
+                    foundFuncByStr()
+                Qtc.QTimer.singleShot(0, runOnExecByStr)
+            else:
+                Qtc.QTimer.singleShot(0, onExec)
+            execInfo.onExec = onExec
+            
+        if autoShow:
+            execInfo.widget.show()
+        execInfo.returnCode = execInfo.qapp.exec_()
+        return execInfo
+    
+    @classproperty
+    def WidgetRecipe(cls):
+        return WidgetRecipe
+
+    
+        
+class QtuiBase(QtuiFuncs):
+    __QappSingleton = None
     
     @classmethod
-    def ExecAndExit(cls,*args,**kargs ):
-        """
-        Exec Qapp and then sys.exit w qapp's returned
-        """
-        qtui = cls( *args, **kargs )
-        qtui.execAndExit()
-        return qtui ## this line may never be called
+    def CreateApp(cls):
+        cls.GetQapp()
+        return cls        
     
-    @classmethod
+    @classmethod ##override
     def GetQapp(cls, argv=None ):
         ## setup self.qapp and self.argv which are closely related
         if cls.__QappSingleton!=None:
             assert argv==None  ## we can't share qapp if giving custom args
             return cls.__QappSingleton
         else:
-            existingQapp = QtWidgets.QApplication.instance()
+            existingQapp = Qtw.QApplication.instance()
             if existingQapp:
                 assert argv==None  ## we can't share qapp if giving custom args
                 cls.__QappSingleton = existingQapp
@@ -170,13 +375,40 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
             else:
                 if argv==None:
                     argv = sys.argv.copy()
-                __QappSinglton = QtWidgets.QApplication( argv )
+                __QappSinglton = Qtw.QApplication( argv )
                 return __QappSinglton
+            
+
+    @classproperty ##override
+    def Qapp(cls):
+        return cls.GetQapp()
+            
+
+
+
+class Qtui( Qtw.QMainWindow, QtuiBase, Easy.AbstractBaseClass  ):  #metaclass=QtuiMeta ):
+        
+    @classmethod
+    def Exec(cls, *args, **kwargs):
+        qtui = cls( *args, **kwargs )
+        return qtui.exec_()
+    
+    @classmethod
+    def ExecAndExit(cls,*args,**kwargs ):
+        """
+        Exec Qapp and then sys.exit w qapp's returned
+        """
+        qtui = cls( *args, **kwargs )
+        qtui.execAndExit()
+        return qtui ## this line may never be called
         
     def exec_(self): ## an extra name to match qt regular atApp.exec_() 
         return self.qapp.exec_()
         
-    def execAndExit(self): ## an extra name to match qt regular atApp.exec_() 
+    def execAndExit(self):
+        """
+        run qapp and automatically call sys.exit with return result
+        """
         r =  self.qapp.exec_()
         Easy.Mods.sys.exit( r )
         return self  ## this line probably never reached
@@ -184,14 +416,21 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
     def execQapp(self):
         return self.qapp.exec_() 
 
-    def __init__(self, *args, **kargs ):
+    def __init__(self, *args, **kwargs ):
         argsOrig = args  ## like tuple(args) because args is already a tuple
-        kargsOrig = kargs.copy()
+        kwargsOrig = kwargs.copy()
         
-        ## add specified entries from kargs
+        ## initArgsMan  = self.argsMan  = ArgsMan(
+        #    args,
+        #    kwargs,
+        #    forSelf=,
+        #    forLocal=,
+        #)
+        
+        ## add specified entries from kwargs
         ## or fallback defaults to self.
-        dkargsForSelf = {
-            ## kargs default fallbacks
+        dkwargsForSelf = {
+            ## kwargs default fallbacks
             'qapp' : None,
             'argv' : None, ## the args to give qapp
             'papp' : None,
@@ -204,7 +443,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
             'appUserModelId' : 'mycompany.myproduct.subproduct.version', #taskbarIcon
             'callbacks' : {},  ## should be a dictionary like object
                 ########  Callbacks should take 'self' at a minimum
-                ########    They should generally take same args/kargs as
+                ########    They should generally take same args/kwargs as
                 ########    the wrapper functions
                 ## createCentralWidget
                 ## createCentralLayout
@@ -238,14 +477,14 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
             'widgets' : {}, ## Stores widgets
             'layouts' : {}, ## Stores layouts
         }
-        Easy.DictOfDefaultsOntoObj( self, dkargsForSelf, kargs )
+        Easy.DictOfDefaultsOntoObj( self, dkwargsForSelf, kwargs )
         
-        dkargsLocal = {
-            ## kargs default fallbacks
+        dkwargsLocal = {
+            ## kwargs default fallbacks
             'QMainWindowArgs' : tuple(), #tuple( (None, self.Qtc.Qt.WindowStaysOnTopHint,) ),
-            'QMainWindowKargs' : {},
+            'QMainWindowKwargs' : {},
         }
-        Easy.DictOfDefaultsOntoDict( dkargsLocal, kargs )
+        Easy.DictOfDefaultsOntoDict( dkwargsLocal, kwargs )
         
         ## add a couple fallback that are dependent on other fallbacks
         ## should add a nice Easy function to do selfToSelf fallbacks
@@ -264,8 +503,8 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
 
 
         super().__init__(
-            *(  kargs[ 'QMainWindowArgs' ]  ),
-            **(  kargs[ 'QMainWindowKargs' ]  ),
+            *(  kwargs[ 'QMainWindowArgs' ]  ),
+            **(  kwargs[ 'QMainWindowKwargs' ]  ),
         )
 
 
@@ -274,8 +513,8 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         if cb=!None:
             self.centralWidgetForLayout = cb()
         '''
-        self.mainWidget = PySide2.QtWidgets.QWidget()
-        self.mainLayout = PySide2.QtWidgets.QFormLayout()
+        self.mainWidget = Qtw.QWidget()
+        self.mainLayout = Qtw.QFormLayout()
         self.addToWidgets( 'mainLayout', self.mainLayout)
         self.mainWidget.setLayout( self.mainLayout )
         
@@ -288,7 +527,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
             self.tabView.addTab( self.mainWidget, self.tabTitle )
             self.setCentralWidget( self.tabView )
         else:
-            centralWidget = self.mainWidget #PySide2.QtWidgets.QWidget()
+            centralWidget = self.mainWidget #Qtw.QWidget()
             self.setCentralWidget( centralWidget )
         #### self.centralWidget should now be valid via superclass ####
 
@@ -297,7 +536,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         """
         cb = self.callbacks.get( 'createMainLayout' )
         if cb==None:
-            self.centralLayout = PySide2.QtWidgets.QFormLayout()
+            self.centralLayout = Qtw.QFormLayout()
         else:
             self.centralLayout = cb()
         """
@@ -361,7 +600,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         self.centralWidgetForLayout.setLayout( self.centralLayout )
         
                 
-    def initLayout(self, *args, **kargs):
+    def initLayout(self, *args, **kwargs):
         """
         Override this to fill layout with your own widgets
         """
@@ -392,11 +631,11 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         #QDockWidget.NoDockWidgetFeatures        
         if self.useOutput:
             self.addDockWidget(
-                QtCore.Qt.BottomDockWidgetArea,
+                Qtc.Qt.BottomDockWidgetArea,
                 self.outputDockWidget,
             )
                 
-        self.outputTextEdit = PySide2.QtWidgets.QTextEdit( )
+        self.outputTextEdit = Qtw.QTextEdit( )
         self.outputTextEdit.setReadOnly( True )
         self.outputBlankLabel = QtWidgets.QLabel( "-" )
         self.outputLayout.addRow(self.outputTextEdit)
@@ -470,7 +709,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
     def initUpdateTimer(self):
         if self.autoUpdateViaTimer==True:
             ## Create tmer based update loop
-            self.updateTimer = QtCore.QTimer()
+            self.updateTimer = Qtc.QTimer()
             self.updateTimer.timeout.connect( self.updateWrapper )
             self.setNextTimerUpdate()
 
@@ -497,13 +736,13 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
     def _createDefaultWidgetsInLayout(self):
         if self.instructionsText!=None:
             self.instructionsLabel = \
-                PySide2.QtWidgets.QLabel(self.instructionsText)
+                Qtw.QLabel(self.instructionsText)
             self.instructionsLabel.setWordWrap(True)
             self.mainLayout.addRow(self.instructionsLabel)        
         
-        self.inputLabel = PySide2.QtWidgets.QLabel("Input:")
+        self.inputLabel = Qtw.QLabel("Input:")
         self.inputLabel.setWordWrap(True)
-        self.inputTextEdit = PySide2.QtWidgets.QTextEdit( )        
+        self.inputTextEdit = Qtw.QTextEdit( )        
         if self.showInput==True:
             self.mainLayout.addRow(self.inputLabel)
             self.mainLayout.addRow(self.inputTextEdit)
@@ -522,13 +761,13 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
                 
         
         """
-        self.outputLabel = PySide2.QtWidgets.QLabel("Output:")
+        self.outputLabel = Qtw.QLabel("Output:")
         self.outputLabel.setWordWrap(True)
         self.outputLayout.addRow(self.outputLabel)
         """
         
         """
-        self.exitButton = PySide2.QtWidgets.QPushButton("Exit")
+        self.exitButton = Qtw.QPushButton("Exit")
         self.exitButton.clicked.connect( self.exitWrapper )
         self.mainLayout.addRow(self.exitButton)
         """
@@ -584,7 +823,14 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         
     def exit(self):
         """
+        actual exit is
+        disabled by default for safety
         
+        override this to control exit behaviour,
+        will be called after onExitWrapper and onExit callback
+        
+        to actually quit instead, you should call
+        use self.qapp.quit()  for full uncoditional
         """
         'pass'
         
@@ -595,7 +841,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         self.exit()
         
         try:
-            ## *** todo  we could change app and win titles tosay exit
+            ## *** todo  we could change app and win titles to say exit
             self.statusBar().showMessage( "Exiting...", 0)
             self.exitButton.setText('Exiting...')
             self.exitButton.repaint()
@@ -673,11 +919,11 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
         self.onGoButtonClicked()        
 
         
-    def print(self, *args, doGui=True, doStandard=True, **kargs):
+    def print(self, *args, doGui=True, doStandard=True, **kwargs):
         ## *** todo  store curpos, move to end for insert,
         ## then restore the cursor's position if it wasn't at end
-        sep = kargs.get('sep', ' ')
-        end = kargs.get('end', '\n')
+        sep = kwargs.get('sep', ' ')
+        end = kwargs.get('end', '\n')
         if doGui:
             for a in args:
                 self.outputTextEdit.insertPlainText( str(a) + str(sep) )
@@ -685,7 +931,7 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
                 self.outputTextEdit.insertPlainText( end )
             self.outputTextEdit.ensureCursorVisible()
         if doStandard:
-            print( *args, **kargs )
+            print( *args, **kwargs )
         self.qapp.processEvents()
             
     def updateWrapper(self):
@@ -706,6 +952,20 @@ class Qtui( PySide2.QtWidgets.QMainWindow, ):  #metaclass=QtuiMeta ):
     @property
     def statusbar(self):
         return self.statusBar()
+
+
+
+
+"""
+class QtuiMeta( type ):
+    @property
+    def QappMeta(cls):  ## depreciated
+        return cls.GetQapp()
+"""
+
+
+
+
 
 oldDecoratorInnerCode = r"""
 

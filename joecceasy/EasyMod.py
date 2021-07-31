@@ -74,12 +74,12 @@ Highlights:
     r = Easy.PrintWithFormat( exampleToFormat, number=2 )
     number = 3
     ## alternate methods of doing the same, with optional end
-    r = Easy.PrintWithFormatV( exampleToFormat, kargs=locals(), end='\n\n\n' )
+    r = Easy.PrintWithFormatV( exampleToFormat, kwargs=locals(), end='\n\n\n' )
     # we don't have to print the results
     unprinted = Easy.Format( exampleToFormat, number=4 )
     # or
     substitutions={ 'number': 5}
-    unprinted = Easy.FormatV( exampleToFormat, kargs=substitutions )
+    unprinted = Easy.FormatV( exampleToFormat, kwargs=substitutions )
     # or without, keyword arguments
     unprinted = Easy.FormatV( exampleToFormat, None, substitutions )
   
@@ -135,6 +135,7 @@ from .Utils import callInitCls, classproperty, Funcs, Object
 from .Utils import EasyReturnedTimeout
 from .EasyThread import EasyThread
 from .FileWatcher import FileWatcher
+from .AbstractBaseClass import AbstractBaseClass
 from . import ModulesLazyLoader
 
 #from . import EasypathBase
@@ -217,9 +218,6 @@ class EasyMeta(type):
     def Forbiddenfruit(cls):
         from .submodules import forbiddenfruit
         return forbiddenfruit
-
-
-
     
     @property
     def Ic( cls ):
@@ -298,7 +296,6 @@ class Easy( metaclass=EasyMeta ):
 
 
 
-
     ###################################
     #### Class and static methods
     @classmethod
@@ -319,6 +316,10 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def AbsPath(cls):
         return Funcs.AbsPath
+    @classproperty
+    def AbstractBaseClass(cls):
+        return AbstractBaseClass
+    
             
     
     @classmethod
@@ -346,11 +347,7 @@ class Easy( metaclass=EasyMeta ):
         
     @classproperty
     def Arg0(cls):
-        raise Exception(
-            r'''Easy Arg0 function doesn't exist. '''
-            '''You probably wanted to use the Argv0 function, '''
-            '''note the "v" in the name.'''
-        )
+        return cls.Inst.argv0
         
     @classproperty
     def Args(cls):
@@ -372,30 +369,106 @@ class Easy( metaclass=EasyMeta ):
     def ArgsParser(cls):
         from . import ArgsParser
         return ArgsParser.ArgsParser
+
+    @classproperty
+    def Argv(cls):
+        import sys
+        return sys.argv
+                
+    @classmethod
+    def Call( cls, *args, **kwargs ):
+        return cls.CallActual( *args, **kwargs )
+
+    @classmethod    
+    def CallActual(self, argsForCommandLine, magicDict=None, quiet=False, loud=False, interactive=False, doMagic=True, autoEscape=False):
+        """
+        """
+        import subprocess
+        
+        if magicDict!=None and doMagic:
+            if autoEscape:
+                raise "auto escape in Easy Call functions can't be used together with Call Magic"
+            if not isinstance( argsForCommandLine, str ):
+                "Call magic only works with a single string used as the command line"
+            for k, v in magicDict.items():
+                mkey = '#%' + k + '%#'
+                if mkey in argsForCommandLine:
+                    argsForCommandLine = (
+                        argsForCommandLine.
+                            replace(
+                                mkey,
+                                str(v)
+                            )
+                        ,
+                    )
+                #print( argsForCommandLine )
+        #print( argsForCommandLine )
+        
+        if autoEscape:
+            if isinstance(args, str):
+                raise "autoEscape only works with lists of args, and each arg will be escaped separately"
+            raise "autoEscape not yet implemented, use one of the Easy.EscArgs functions instead"
+            #argsForCommandLine = cls.EscArgForCmdExe(argsForCommandLine)
+            
+
+        
+        if not quiet:
+            if loud==True:
+                print( '-------- Before Start of Call --------' )
+                if not isinstance( argsForCommandLine, str ):
+                    print( 'Calling by passing subprocess func args obj: ', argsForCommandLine )
+                else:
+                    print( 'Calling: ', argsForCommandLine )
+                
+                print( '-------- Start of Call --------' )
+        
+        if interactive==True:
+            r = subprocess.run(
+                argsForCommandLine,
+                shell=True
+            )   
+        else:
+            r = subprocess.run(
+                argsForCommandLine,
+                shell=True,
+                universal_newlines=True,  #text=True  only since py3.8
+                #capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+        
+        if not quiet:
+            print( (r.stdout) )
+            if loud==True:
+                print( '-------- End Of Call --------' )
+                
+        return r
         
     @classmethod
-    def Call( cls, *args, **kargs ):
-        return cls.Inst.actionCall( *args, **kargs )
-        
-    @classmethod
-    def CallInteractive( cls, *args, **kargs ):
-        kargs['interactive']=True
-        cls.Inst.actionCall( *args, **kargs )
-        
-    @classmethod
-    def CallI( cls, *args, **kargs ):
-        cls.CallInteractive( *args, **kargs )
-        
+    def CallInteractive( cls, *args, **kwargs ):
+        kwargs['interactive']=True
+        try:
+            cls.CallActual( *args, **kwargs )
+        except KeyboardInterrupt:
+            print( "Interrupted by keyboard (ctrl-c probably) when running:", *args )
+
+    @classproperty
+    def CallI( cls ):
+        return cls.CallInteractive
     
     @classmethod
-    def CallLoud( cls, *args, **kargs ):
-        kargs['loud']=True
-        return cls.Inst.actionCall( *args, **kargs )
-   
+    def CallLoud( cls, *args, **kwargs ):
+        kwargs['loud']=True
+        return cls.CallActual( *args, **kwargs )
+
+    @classproperty
+    def CallQ( cls ):
+        return cls.CallQuiet
+       
     @classmethod
-    def CallQ( cls, *args, **kargs ):
-        kargs['quiet']=True
-        return cls.Inst.actionCall( *args, **kargs )
+    def CallQuiet( cls, *args, **kwargs ):
+        kwargs['quiet']=True
+        return cls.CallActual( *args, **kwargs )
 
     @classproperty
     def CbCopy(cls):
@@ -404,7 +477,11 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def CbPaste(cls):
         return cls.PyperclipPaste
-    
+
+    @classproperty
+    def Cd0(cls):
+        return cls.CdToScriptDir
+        
     @classmethod
     def CdToScriptDir(cls):
         cls.Mods.os.chdir( cls.ScriptDir )
@@ -438,16 +515,16 @@ class Easy( metaclass=EasyMeta ):
         return classmethod
          
     @classproperty
-    def Code(cls): ## property can't pass *args, **kargs
+    def Code(cls): ## property can't pass *args, **kwargs
         #print( 'Code is being processed and run by joeccbatpy... ' + cls.Inst.argv0 + '' )
         return cls.CodeQuiet
         
     @classproperty
-    def CodeQ(cls):  ## property can't pass *args, **kargs
+    def CodeQ(cls):  ## property can't pass *args, **kwargs
         return cls.CodeQuiet
         
     @classproperty
-    def CodeQuiet(cls):  ## property can't pass *args, **kargs
+    def CodeQuiet(cls):  ## property can't pass *args, **kwargs
         return cls.Inst.getCode()
 
     @classproperty
@@ -479,6 +556,51 @@ class Easy( metaclass=EasyMeta ):
     def Dir(cls):
         'pass'
         
+    @classproperty
+    def DirsyncFunc(cls):
+        """
+        Usage Example:
+        
+        Easy.DirsyncFunc( src, dest, actionStr, optionsDict ) 
+        
+        
+        to use actions/options in function call, do not include "--"
+        use  'sync'  not '--sync'
+
+        for dict values True and False should work
+        or strings or lists of string for things like excludes 
+        
+        
+        See https://github.com/tkhyn/dirsync/ for full options
+        
+        
+        Main Options
+        
+        --diff, -d     Only report difference between sourcedir and targetdir
+        --sync, -s     Synchronize content between sourcedir and targetdir
+        --update, -u     Update existing content between sourcedir and targetdir
+        
+        If you use one of the above options (e.g. sync) most of the time, you may consider defining the action option in a Configuration file parsed by dirsync.
+        Additional Options
+        --verbose, -v     Provide verbose output
+        --purge, -p     Purge files when synchronizing (does not purge by default)
+        --force, -f     Force copying of files, by trying to change file permissions
+        --twoway, -2     Update files in source directory from target directory (only updates target from source by default)
+        --create, -c     Create target directory if it does not exist (By default, target directory should exist.)
+        --ctime     Also takes into account the source file's creation time (Windows) or the source file's last metadata change (Unix)
+        --content     Takes into account ONLY content of files. Synchronize ONLY different files. At two-way synchronization source files content have priority if destination and source are existed
+        --ignore, -x patterns
+             Regex patterns to ignore
+        --only, -o patterns
+             Regex patterns to include (exclude every other)
+        --exclude, -e patterns
+             Regex patterns to exclude
+        --include, -i patterns
+             Regex patterns to include (with precedence over excludes)
+        """
+        from .submodules.dirsync import sync
+        return sync
+        
     def DirToObj(cls):
         'pass'
 
@@ -509,6 +631,105 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def Envs(cls):
         return Easy.Mods.os.environ
+
+
+
+
+    @classmethod
+    def EscArgForWin(cls, arg):
+        """
+        see notes in EscArgsForCmdExe
+        """
+        import re
+        reObj = re.search(r'(["\s])', arg)
+        if not arg or reObj:
+            arg = '"' + arg.replace('"', r'\"') + '"'
+        return arg
+        
+    @classmethod
+    def EscArgsForWin( cls, args, join=True ):
+        """
+        see notes in EscArgsForCmdExe
+        """
+        if isinstance( args, str ):
+            raise "EscArgsForWin needs a nonstring like iterable container, such as a list"
+        escArgs = []
+        for arg in args:
+            esc = cls.EscArgForWin( arg )
+            escArgs.append( esc )
+        if join==True:
+            escArgs = ' '.join( escArgs )            
+        return escArgs
+
+    @classmethod
+    def EscArgForCmdExe(cls, arg, alsoEscapeForWin=True):
+        """
+        arg should already be escaped for CommandLineToArgvW
+        or whatever other parsing engine the eventual  program using the arg expects
+        
+        see notes in escArgsForCmdExe func
+        """
+        if alsoEscapeForWin:
+            arg = cls.EscArgForWin( arg )
+        import re
+
+        def escapeCharsToEsc(m):
+            char = m.group(1)
+            return charsMap[char]
+
+        charsToEsc = '()%!^"<>&|'
+        reObj = re.compile('(' + '|'.join(re.escape(char) for char in list(charsToEsc)) + ')')
+        charsMap = { char: "^%s" % char for char in charsToEsc }
+        escaped = reObj.sub(escapeCharsToEsc, arg)
+        return escaped
+
+    @classmethod
+    def EscArgsForCmdExe(cls, args, alsoEscapeForWin=True, join=True):
+        """
+        do not use this one normally, only for complex things
+        with |%>< etc literals
+        where you don't want the arg to cause redirects/pipes/etc
+        normally if running a shell command you probably do want
+        redirects etc unless cmd or args are from an untrusted source
+        in which case this Easy system shouldn't be used.
+        
+        windows and cmd.exe may need two layers of escaping
+        once for CommandLineToArgvW and once for cmd.exe
+        
+        see: https://stackoverflow.com/questions/29213106/how-to-securely-escape-command-line-arguments-for-the-cmd-exe-shell-on-windows#29215357
+
+        ## and See http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
+        """
+        if isinstance( args, str ):
+            raise "EscArgsForWin needs a nonstring like iterable container, such as a list"
+        escArgs = []
+        for arg in args:
+            esc = cls.EscArgForCmdExe( arg, alsoEscapeForWin=alsoEscapeForWin )
+            escArgs.append( esc )
+        if join==True:
+            escArgs = ' '.join( escArgs )
+        return escArgs
+        
+    def EscArgForPosix(cls, arg):
+        import shlex
+        return shlex.quote( arg )
+        
+    def EscArgsForPosix(cls, args):
+        import shlex
+        escArgs = []
+        for arg in args:
+            esc = shlex.quote(arg)
+            escArgs.append(arg)
+        return escArgs
+        
+    def EscArgs( cls, args ):
+        """
+        this function should check for platform and potentially cmd.exe / shell
+        to determine how to escape the arguments, then
+        Call functions can automatically incorporate it as well
+        """
+        raise "not implemented"
+    
         
     @classproperty
     def Eval(cls):
@@ -517,12 +738,10 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def ExtendBuiltinClass(cls):
         return Funcs.ExtendBuiltinClass
-    @classmethod
-    def Exit(cls, *args, **kargs):
-        import sys
-        sys.exit( *args, **kargs )
 
-
+    @classproperty
+    def Exit(cls):
+        return Funcs.Exit
         
     @classmethod
     def FileRead(cls, filePath ):
@@ -553,12 +772,20 @@ class Easy( metaclass=EasyMeta ):
         return Funcs.FromFrame
         
     @classproperty
+    def Funcs(cls):
+        return Funcs
+        
+    @classproperty
     def GetFirstNonNoneElseReturnNone(cls):
         return Funcs.GetFirstNonNoneElseReturnNone
     
     @classproperty
     def GetRoutinesFromObj(cls):
         return Funcs.GetRoutinesFromObj
+
+    @classproperty
+    def Glob(cls):
+        return Funcs.Glob    
 
     @classproperty
     def Global(cls):
@@ -726,7 +953,13 @@ class Easy( metaclass=EasyMeta ):
         return Funcs.NowLocalStr
 
     @classproperty
-    def ODict(cls, *args,**kargs):
+    def ODict(cls, *args,**kwargs):
+            ## *args, and **kwargs are defensive
+            ##  might not be needed for this to work
+        return Funcs.ODict
+
+    @classproperty
+    def OrderedDict(cls, *args,**kwargs):
             ## *args, and **kwargs are defensive
             ##  might not be needed for this to work
         return Funcs.ODict
@@ -737,7 +970,7 @@ class Easy( metaclass=EasyMeta ):
    
         
     #@classmethod
-    #def Pip( cls, *args, action='install', installMode='user', **kargs ):
+    #def Pip( cls, *args, action='install', installMode='user', **kwargs ):
     #    print( 'Easy.Pip not yet implemented')
     #    #if action=='install'
     
@@ -756,6 +989,12 @@ class Easy( metaclass=EasyMeta ):
         
     @classproperty
     def PrintTraceback(cls):
+        return Funcs.PrintTraceback
+    @classproperty
+    def PrintTb(cls):
+        return Funcs.PrintTraceback
+    @classproperty
+    def Ptb(cls):
         return Funcs.PrintTraceback
         
     @classproperty
@@ -855,6 +1094,18 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def ReloadCount(cls): 
         return cls.__ReloadCount
+
+    @classmethod
+    def ReverseEnumList( ls ):
+        for i in range( len(ls) - 1, -1, -1):
+            yield i, ls[i]
+            
+    @classmethod
+    def ReverseRangeList( ls ):
+        for i in range( len(ls) - 1, -1, -1):
+            yield i
+            
+
     
     @classproperty
     def Rreplace(cls):
@@ -890,18 +1141,23 @@ class Easy( metaclass=EasyMeta ):
         return Funcs.Sleep
     
     @classmethod
+    def SplitExt(cls, path,):
+        import os
+        return os.path.splitext( path )
+    
+    @classmethod
     def SplitDirFileExt(cls, path,): #cleanTrailingSlashes=False):
-        
+        import os
         sep = os.path.sep
 
-        dir, filename = os.path.split(path)
+        dr, filename = os.path.split(path)
         if len(filename)==0:
             filebasename=''
             ext=''
         else:
             filebasename, ext = os.path.splitext( filename )
             
-        return dir, filebasename, ext
+        return dr, filebasename, ext
     
         
     @classmethod
@@ -970,11 +1226,11 @@ class Easy( metaclass=EasyMeta ):
         return sub
     
     @classmethod
-    def Tail( cls, *args, **kargs ):
+    def Tail( cls, *args, **kwargs ):
         argsList = list(args) ##
-        n = kargs.pop( 'n', 5 )
-        tailsep = kargs.pop( 'tailsep', '\n\n' )
-        asList=kargs.pop( 'asList', False )
+        n = kwargs.pop( 'n', 5 )
+        tailsep = kwargs.pop( 'tailsep', '\n\n' )
+        asList=kwargs.pop( 'asList', False )
         
         nl='\n'
                 
@@ -989,6 +1245,7 @@ class Easy( metaclass=EasyMeta ):
             s = tailsep.join( tails )
             return s
 
+
     @classmethod
     def TimeoutDefault( cls, timeout, default, func, *args, **kwargs ):
         result = cls.TimeoutFull( timeout, func, *args, **kwargs )
@@ -996,7 +1253,10 @@ class Easy( metaclass=EasyMeta ):
             return default
         else:
             return result  
-    
+
+    @classproperty
+    def Tb(cls):
+        return Funcs.Traceback    
     
     @classmethod
     def TimeoutErr( cls, timeout, func, *args, **kwargs ):
@@ -1044,6 +1304,9 @@ class Easy( metaclass=EasyMeta ):
         return response
                 
 
+    @classproperty
+    def TmpDir( cls ):
+        return Funcs.TmpDir
         
     @classproperty  ## *** todo  make this a property
     def Traceback(cls):
@@ -1259,8 +1522,20 @@ class Easy( metaclass=EasyMeta ):
             if iProc.Name==name:  ##.startswith( "WmiPrvSE"):
                 wmiProcs.append( iProc )
         return wmiProcs
-             
-    
+
+    @classmethod           
+    def Ytdl(cls, *args, **kwargs ):
+        return cls.YtdlMod.ytdl( *args, **kwargs )
+        
+    @classproperty           
+    def YtdlIter(cls):
+        return cls.YtdlMod.ytdlIter
+                
+    @classproperty          
+    def YtdlMod(cls):
+        from . import Ytdl as YtdlMod
+        return YtdlMod
+        
     
     
     
@@ -1364,47 +1639,8 @@ class Easy( metaclass=EasyMeta ):
             
         return self
         
-    def actionCall(self, argsForCommandLine, magicDict=None, quiet=False, loud=False, interactive=False):
-        import subprocess
-        if magicDict!=None:
-            for k, v in magicDict.items():
-                mkey = '#%' + k + '%#'
-                if mkey in argsForCommandLine:
-                    argsForCommandLine = (
-                        argsForCommandLine.
-                            replace(
-                                mkey,
-                                str(v)
-                            )
-                        )
-        
-        if interactive==True:
-            subprocess.run(
-            argsForCommandLine,
-            shell=True
-        )
-
-        
-        if not quiet:
-            if loud==True:
-                print( '-------- Start of Call --------' )
-                print( 'Calling: '+ argsForCommandLine )
-                
-        r = subprocess.run(
-            argsForCommandLine,
-            shell=True,
-            universal_newlines=True,  #text=True  only since py3.8
-            #capture_output=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
-        )
-        
-        if not quiet:
-            print( (r.stdout) )
-            if loud==True:
-                print( '-------- End Of Call --------' )
-                
-        return r
+    def actionCall(self, *args, **kwargs ):
+        self.CallActual( *args, **kwargs )
 
     def atInitFallbackInCaseNoArg0(self):
         tmpFile = tempfile.NamedTemporaryFile(
@@ -1582,7 +1818,7 @@ EasyModLoadingIsComplete=True
 EasyModLoadingIsComplete=True
 for cb in SelfModLoadingCompleteCallbacks:
     if False:
-        ## *** todo, add check for callback type object with args and kargs
+        ## *** todo, add check for callback type object with args and kwargs
         'pass'
     elif callable(cb):
         cb( SelfMod )

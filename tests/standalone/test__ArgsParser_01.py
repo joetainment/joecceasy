@@ -1,6 +1,15 @@
 from joecceasy import Easy
 
-def main():
+def test_ArgParser_01():
+    ## this should eventually be triggered by pytest and actually
+    ## call cmd line python with arguments to test, then check results
+    utiltest_ArgParser_01()
+    
+def utiltest_ArgParser_01():
+    """
+    run the command and test the result
+    python "test__ArgsParser_01.py" "positional arg a" "positional arg b" "positional arg c" --myStringArg "this is my string!" --myFlagArg --myFloatArg 0.3 --myIntArg 7
+    """
     #Easy.ArgsParser.GetFlag("f")
     #print( Easy.ArgsParser.GetFlag("testArg") )
     #print( )
@@ -34,4 +43,4 @@ def main():
     print( Easy.ArgsParser.GetNs("testArg") )
 
 if __name__=='__main__':
-    main()
+    utiltest_ArgParser_01()

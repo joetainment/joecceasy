@@ -10,11 +10,11 @@ from joecceasy import Easy ; Easy.Init()
 ## *args, then optional arguments, then **kwargs
 ## using a pattern like below, otherwise there may be issues
 ## trying to pass through optional arguments
-class JoeccToMp3Qtui(Easy.Qtui):
+class EasyToMp3Qtui(Easy.Qtui):
     def __init__(
             self,
             *args,
-            title="JoeccToMp3",
+            title="EasyToMp3",
             showInput=False,
             autoExpandOutput=True,
             useTabs=False,
@@ -241,6 +241,6 @@ class JoeccToMp3Qtui(Easy.Qtui):
         return outFile
 
 
-joeccToMp3Qtui = JoeccToMp3Qtui( )
-exitCode = joeccToMp3Qtui.execQapp()
+easyToMp3Qtui = EasyToMp3Qtui( )
+exitCode = easyToMp3Qtui.execQapp()
 Easy.Exit( exitCode )

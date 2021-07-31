@@ -88,15 +88,15 @@ ${2} /___________\
 
 '''
 class AscuiFrameOld(Frame):
-    def __init__(self, screen, *args, **kargs):
+    def __init__(self, screen, *args, **kwargs):
         #argsOrig = args  ## like tuple(args) because args is already a tuple
-        #kargsOrig = kargs.copy()
+        #kwargsOrig = kwargs.copy()
         ## Defaults that will be applied to self
-        ##   add specified entries from kargs
+        ##   add specified entries from kwargs
         ##   or fallback defaults to self.
-        self.parent = kargs['parent']
+        self.parent = kwargs['parent']
         self.parent.frame = self        
-        dkargsForSelf = {
+        dkwargsForSelf = {
             #'parent': None,
             'widthRef': None,
             'heightRef': None,
@@ -105,12 +105,12 @@ class AscuiFrameOld(Frame):
             'screenRef': screen,
             'hasShadowRef': True
         }
-        Easy.DictOfDefaultsOntoObj( self, dkargsForSelf, kargs )
+        Easy.DictOfDefaultsOntoObj( self, dkwargsForSelf, kwargs )
         
         ## Defaults that shouldn't get applied to self
-        dkargsLocal = {
+        dkwargsLocal = {
         }
-        Easy.DictOfDefaultsOntoDict( dkargsLocal, kargs )
+        Easy.DictOfDefaultsOntoDict( dkwargsLocal, kwargs )
         
         if self.heightRef is None:
             self.heightRef = int(screen.height * 9 // 10)
@@ -440,7 +440,7 @@ class AscuiFrame(Frame):
     def __init__(self, screen, *args,
         parent=None, callbackOnChange=None,
         quitAskMsg="Quit? Are you sure?",
-        **kargs,
+        **kwargs,
         ):
         """
         
@@ -457,13 +457,13 @@ class AscuiFrame(Frame):
             self.set_theme("tlj256")
             maybe more depending on what super()'s Frame supports
         """
-        ## these kargs will get passed to super, Frame
-        #dkargsForSelf = {
+        ## these kwargs will get passed to super, Frame
+        #dkwargsForSelf = {
         #            'frameData':{}
         #}
-        #Easy.DictOfDefaultsOntoObj( self, dkargsForSelf, kargs )        
-        if 'data' not in kargs:
-            kargs['data']={}
+        #Easy.DictOfDefaultsOntoObj( self, dkwargsForSelf, kwargs )        
+        if 'data' not in kwargs:
+            kwargs['data']={}
             
         self.defaultLayoutColumnWidths = [1, 18, 1]
         self.defaultFooterLayoutColumnWidths = [1, 1, 1]
@@ -471,7 +471,7 @@ class AscuiFrame(Frame):
         self.parent=parent,
         
         self.callbackOnChange = callbackOnChange
-        super().__init__(screen, *args, **kargs )
+        super().__init__(screen, *args, **kwargs )
         
         if not hasattr( self, "widgets" ):
             self.widgets={}
@@ -545,7 +545,7 @@ class AscuiFrame(Frame):
             layout=None,
             layoutCol=1,
             inFooter=False,
-            **kargs ):
+            **kwargs ):
         """
         param: layout - layout object or dict key
         examples:
@@ -574,29 +574,29 @@ class AscuiFrame(Frame):
             if callback is None:
                 callback=self.on_change
             widget=Text( *args,
-                name=name, label=label, on_change=callback, **kargs )
+                name=name, label=label, on_change=callback, **kwargs )
         elif kind=="Label":
-            widget=Label( val, *args, **kargs )
+            widget=Label( val, *args, **kwargs )
         elif kind=="Button":
             if callback is None:
                 callback=lambda: None
-            widget=Button( label, callback, *args, **kargs )
+            widget=Button( label, callback, *args, **kwargs )
         elif kind=="Divider":
-            widget=Divider( *args, **kargs )
+            widget=Divider( *args, **kwargs )
         elif kind=="TextBox":
             if isinstance(val,str):
                 val = val.split('\n')
             self.data[name]=val
             if callback==None:
                 callback=self.on_change            
-            textBoxHeight=kargs.get('height',3)
-            if 'height' in kargs:
-                del kargs['height']
+            textBoxHeight=kwargs.get('height',3)
+            if 'height' in kwargs:
+                del kwargs['height']
             widget = TextBox(textBoxHeight,
                 label=label,
                 name=name,
                 #parser=AsciimaticsParser(),
-                on_change=callback, *args, **kargs)
+                on_change=callback, *args, **kwargs)
         else:
             raise Exception('incorrect kind arg given')
         self.widgets['name']=widget
@@ -721,7 +721,7 @@ class Ascui(Chainable ):
     
     
     def __init__(self, *args,**kwargs):
-        dkargsForSelf = {
+        dkwargsForSelf = {
             'title' : "Ascui App",
             'data':{},
             'name':None,
@@ -733,7 +733,7 @@ class Ascui(Chainable ):
             'parent' : None,
             'quitAskMsg' : 'Quit? Are you sure?',
         }
-        Easy.DictOfDefaultsOntoObj( self, dkargsForSelf, kwargs )                 
+        Easy.DictOfDefaultsOntoObj( self, dkwargsForSelf, kwargs )                 
 
         #self.lastReturnInfo = None
 
@@ -867,33 +867,33 @@ class Ascui(Chainable ):
 def oldDisabledCodeWasInAscuiFrameClass():
     
     @classmethod
-    def Exec(cls, *args, last_scene=None, **kargs):
-        def defaultCallback(*args,**kargs):
+    def Exec(cls, *args, last_scene=None, **kwargs):
+        def defaultCallback(*args,**kwargs):
             return {'continueExecLoop':True}
-        callback = kargs.get( 'callback', defaultCallback )
-        callbackArgs = kargs.get( 'callbackArgs', tuple() )
-        callbackKargs = kargs.get( 'callbackKargs', {} )
+        callback = kwargs.get( 'callback', defaultCallback )
+        callbackArgs = kwargs.get( 'callbackArgs', tuple() )
+        callbackKwargs = kwargs.get( 'callbackKwargs', {} )
         ## not entirely sure why this is a loop
         while True:
-            callbackResult = callback( *callbackArgs, **callbackKargs )
+            callbackResult = callback( *callbackArgs, **callbackKwargs )
             continueExecLoop = callbackResult['continueExecLoop']
             print ( Easy.Mods.time.time() )
             if not continueExecLoop:
                 break
-            return cls.ScreenWrapperCall( last_scene, *args,**kargs )
+            return cls.ScreenWrapperCall( last_scene, *args,**kwargs )
 
                 
     @classmethod
-    def ScreenWrapperCall(cls, last_scene, *args, **kargs):
+    def ScreenWrapperCall(cls, last_scene, *args, **kwargs):
         try:
             ## The call below is structured pretty strangely
             ## because we can't alter the internals of Screen.Wrapper
-            ## our args and kargs are sneaked into its arguments list
+            ## our args and kwargs are sneaked into its arguments list
             exitCode = Screen.wrapper(
                 cls.FuncForScreenWrapperToUse,
                 catch_interrupt=False,
                 ## *,** left out on purpose
-                arguments=[last_scene,args,kargs] 
+                arguments=[last_scene,args,kwargs] 
             )
             print( f"exitCode is: {exitCode}" )
             return exitCode #self.exitCode
@@ -901,18 +901,18 @@ def oldDisabledCodeWasInAscuiFrameClass():
             last_scene = e.scene        
     
     ## The way the asciimatic library works is pretty weird
-    ## so this function and its args/kargs are pretty weird because
+    ## so this function and its args/kwargs are pretty weird because
     ## they are setup in a way that lets the Screen.Wrapper function
     ## indirectly trigger this function getting called
     @classmethod
-    def FuncForScreenWrapperToUse(cls, screen, scene , args , kargs ):
+    def FuncForScreenWrapperToUse(cls, screen, scene , args , kwargs ):
         ## avoid maxing out CPU, 
         ## even at 0.03 cpu load may be ~1%
         time.sleep(0.03) 
         screen.play([Scene([
             Background(screen),
             #self,
-            cls(screen, *args,**kargs)#args, kargs)
+            cls(screen, *args,**kwargs)#args, kwargs)
         ], -1)], stop_on_resize=True, start_scene=scene, allow_int=True)
         #return self.exitCode ## no self in this func implementation
         #print( "exitCode hardcoded to zero")
