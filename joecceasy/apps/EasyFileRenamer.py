@@ -233,10 +233,15 @@ class JoeccFileRenamer(Easy.Qtui):
                 try:
                     os.rename( pathOld, pathNew )
                     dictOfRenamed[pathNew] = True
+                except KeyboardInterrupt as err:
+                    raise
                 except:
                     anyFailed=True
                     self.print( Easy.Traceback()  )
                     self.print( "An error occured."  )
+                    
+        except KeyboardInterrupt as err:
+            raise
                     
         except: 
             anyFailed=True   

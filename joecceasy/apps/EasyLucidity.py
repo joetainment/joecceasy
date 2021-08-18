@@ -10,6 +10,10 @@ class TranslucentWidgetSignals(QtCore.QObject):
 
 class TranslucentWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
+        ## keyboard interrupt, qt bug fix   
+        import signal
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        
         super(TranslucentWidget, self).__init__(parent)
         self.cycle = 0
         self.timerTime  =  5000
@@ -57,7 +61,7 @@ class TranslucentWidget(QtWidgets.QWidget):
 
     def onTimer(self):
         import math, random
-        print( 'hey' )
+        print( 'EasyLucidity running, current app time.time is:' + str(Easy.Mods.time.time()) + ' ...' )
         x = random.uniform( 1, 1900-self.width() ) ##+ self.width()/2 , 1900-self.width()/2
         y = random.uniform( 1, 1000-self.height() )
         x = math.floor(x)
@@ -86,7 +90,7 @@ class TranslucentWidget(QtWidgets.QWidget):
 
 
 
-
+##self.destroyed.connect(lambda: self._unregister())
 app=QtWidgets.QApplication(sys.argv)
 win = TranslucentWidget()
 win.show()

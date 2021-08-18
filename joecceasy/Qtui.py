@@ -483,8 +483,17 @@ class Qtui( Qtw.QMainWindow, QtuiBase, Easy.AbstractBaseClass  ):  #metaclass=Qt
             ## kwargs default fallbacks
             'QMainWindowArgs' : tuple(), #tuple( (None, self.Qtc.Qt.WindowStaysOnTopHint,) ),
             'QMainWindowKwargs' : {},
+            'KeyboardInterruptFix' : True,
         }
         Easy.DictOfDefaultsOntoDict( dkwargsLocal, kwargs )
+        
+        
+        ## KeyboardInterrupt work, fixes qt bug
+        if kwargs['KeyboardInterruptFix']: 
+            print( 'keyboard int fix')
+            import signal
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+        
         
         ## add a couple fallback that are dependent on other fallbacks
         ## should add a nice Easy function to do selfToSelf fallbacks
@@ -496,7 +505,7 @@ class Qtui( Qtw.QMainWindow, QtuiBase, Easy.AbstractBaseClass  ):  #metaclass=Qt
     
         #if self.qapp==None:
         self.initQapp()
-        
+
         ## after qapp,  set self.argv to something reasonable if it's None
         if self.argv==None:
             self.argv = sys.argv.copy()        
@@ -513,6 +522,9 @@ class Qtui( Qtw.QMainWindow, QtuiBase, Easy.AbstractBaseClass  ):  #metaclass=Qt
         if cb=!None:
             self.centralWidgetForLayout = cb()
         '''
+
+        self.clipboard = self.Qtg.QGuiApplication.clipboard()
+
         self.mainWidget = Qtw.QWidget()
         self.mainLayout = Qtw.QFormLayout()
         self.addToWidgets( 'mainLayout', self.mainLayout)
@@ -846,6 +858,8 @@ class Qtui( Qtw.QMainWindow, QtuiBase, Easy.AbstractBaseClass  ):  #metaclass=Qt
             self.exitButton.setText('Exiting...')
             self.exitButton.repaint()
         except:
+            ## it *really* doesn't matter if
+            ## the above gives errors
             'pass'
         Easy.Sleep( self.exitSleepTime )            
         self.qapp.quit()
