@@ -223,8 +223,6 @@ class JoeccClipboardEditor(Easy.Qtui):
         # underscoresToSpaces
 
 
-
-
         """
         More xforms to add:
         
