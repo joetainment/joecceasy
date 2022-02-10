@@ -46,6 +46,12 @@ UtilsModLoadingIsComplete=False
 ####################################################
 ## raw functions that can't be part of class
 
+JoecceasyMagicMarker20220206918745738 = (
+  "JoecceasyMagicMarker20220206918745738__"
+ +"opts_begin_files_only__marker__"
+ +"every_opt_after_this_is_an_intentional_filename"
+ +"_even_if_it_starts_w_dash"
+)
 
 def seePrint( var, val,   sep=' ',end='\n', 
               withType=True, withTime=False, withNonRepr=False,
@@ -478,12 +484,99 @@ class Funcs(object):
         import sys
         return len( sys.argv[1:] )
 
+    @classproperty
+    def ArgsAsOpts(cls, *args, **kwargs ):
+        return cls.ArgsToOpts( *args, **kwargs )
+        
+    @classmethod
+    def ArgsToOpts(cls, args = None, doMarkFilesOnlyPoint=False ):
+        """
+        A very simple low effort way to get options
+          option=lenny or --option=call will work
+          or --option=carl  or 
+          
+          individual flags like  install or  --install
+          will work two and show with value int(1) in dict
+          
+          "--" support exists and will put those in at the end of the dict
+          
+          should add function here from collapsing long and short forms
+          after key startswith
+            JoecceasyMagicMarker20220206918745738
+            all remaining should be treated as files  
+        """
+        import sys
+        from collections import OrderedDict
+        if args is None:
+            args = sys.argv[1:]
+        
+        iterArgs = iter(args)  ## not necessary if we don't allow space after equals
+        opts = OrderedDict()
+        singles = []
+        pairs = []
+        filesOnly = []
+        reachedOnlyFileArgs=False
+        for arg in iterArgs:
+          if arg == '--':
+            reachedOnlyFileArgs = True
+            if doMarkFilesOnlyPoint:
+                opts[JoecceasyMagicMarker20220206918745738]=True
+          if reachedOnlyFileArgs == True:
+            filesOnly.append( arg )
+                
+                
+          else:
+            if not '=' in arg:
+              singles.append(arg)
+            elif arg.startswith('='):
+              ## have to treat as single arg
+              singles.append(arg)
+            else:
+              splt = arg.split('=',1)
+              if len(splt) != 2:
+                singles.append(arg)
+              else:
+                spltA, spltB = splt
+                pairs.append( [spltA, spltB ] )
+        
+        for el0,el1 in pairs:
+          opts[el0]=el1
+        
+        for el in singles:
+          opts[el]=1
+        
+        for el in filesOnly:
+          opts[el]=2
+          
+        return opts
+    
+        ## Could hace code to handle pairs without spaces or
+        ## spaces after equals signs,  some half baked ideas
+        # for i,opt in enumerate(iterArgs):
+        #   l = opt
+        #   for ii, oopt in enumerate(l):
+        #     if opt == '--':
+        #       'switch to taking filenames only not arguments anymore'
+        #     if opt.endswith( '=' ):
+        #       n iterArgs.__next__()
+        #       opts[oopt]=
+        #     l.append( n   )
+        #
+        # print( opts )
+
+        
     @classmethod
     def Cd(cls, path):
         import os
         os.chdir( path )
         return os.getcwd()
-        
+    
+    @classproperty
+    def ContextManager(cls):
+        import contextlib
+        return contextlib.contextmanager
+    
+    
     @classmethod
     def CropListUpToFirstNewline( cls, ls):
         return Utils.Funcs.CropListUpToFirstNewline( ls )
@@ -561,7 +654,8 @@ class Funcs(object):
         try:
             copy = dictToCopy.copy()
             for key in keysToExcludeIterable:
-                del copy[key]
+                if key in copy:
+                    del copy[key]
         except Exception as e:
             raise type(e)(
                 str(e)
@@ -968,6 +1062,14 @@ class Funcs(object):
 
 
     @classmethod
+    def JoinDir(cls, *args, ext=''):
+        """
+        Joins all args as path components and optionally adds  ext  on the end
+        """
+        import os
+        return os.path.join( *args ) + ext
+
+    @classmethod
     def JoinDirFileExt(cls, dir, fbname, ext ): #cleanTrailingSlashes=False):
         import os
         fname = fbname + ext
@@ -978,6 +1080,22 @@ class Funcs(object):
     def Ls(cls, *args):
         import os
         return os.listdir( *args )        
+
+    @classmethod
+    def LsAbs(cls, path):
+        import os
+        if False:
+            oldDir = os.getcwd()
+            os.chdir( path )
+            l = os.listdir( )
+            ## careful, os.path.abspath is relative to cwd, not path
+            ## this only works because we chdir
+            lAbs = [ os.path.abspath(i) for i in l ] 
+            os.chdir( oldDir )
+        else:
+            l = os.listdir( path )
+            lAbs = [ os.path.join( path, e ) for e in l ]     
+        return lAbs
 
     @classmethod
     def Namespace(cls,*args,**kwargs):
@@ -1068,6 +1186,17 @@ class Funcs(object):
         for args in argsS:
             for arg in args:
                 print( arg, **kwargs )
+
+        
+    @classmethod
+    def PrintFile(cls, *args, **kwargs ):
+        args = list(args)
+        with open( args[0], 'r' ) as fh:
+            txt = fh.read() 
+        args[0] = txt
+        print( *args, **kwargs )
+
+        
         
     @classmethod
     def PrintLoop(cls, *args,

@@ -6,6 +6,7 @@ class Duck():
 
 class Tubprocess():
     OutErrTuple = collections.namedtuple('OutErrTuple',['out','err'])
+    OutErrCodeTuple = collections.namedtuple('OutErrTuple',['out','err','code'])
     
     @staticmethod
     def moveFromQToList( q, l ):
@@ -76,6 +77,19 @@ class Tubprocess():
             self.errStrLast = ''.join(errList)
         
         return self.errStrLast
+    
+    @property
+    def pair(self):
+        return self.outStr, self.errStr
+        
+    @property
+    def tup(self):
+        return self.OutErrCodeTuple( self.outStr, self.errStr, self.retVal )
+        
+    @property
+    def auto(self):
+        self.run()
+        return self.tup
 
 
     def next(self):
@@ -252,9 +266,14 @@ class Tubprocess():
         self.joinProcAndThreads()
     
     def wait(self):
+        ## self is iterable, actual iteration does the work
         for i in self:
             "pass"
         return self.retVal
     
     def run(self):
         return self.wait()
+
+    def chain(self):
+        self.wait()
+        return self

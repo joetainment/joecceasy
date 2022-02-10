@@ -14,5 +14,5 @@ with open('gitignore----aaall-pytests-output.txt','w') as fh:
 
 print( 'results: ', results )
 print( dir(pytest) )
-"""bb
-that bvbvbavba<
+"""
+

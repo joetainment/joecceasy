@@ -124,7 +124,6 @@ EasyModLoadingIsComplete=False
 #import os, sys, subprocess, time, tempfile, traceback
 #from _ctypes import ArgumentError
 
-
 #################################
 #### joeceasy module imports
 ####  as a general rule, import the entire module first
@@ -350,6 +349,10 @@ class Easy( metaclass=EasyMeta ):
         return cls.Inst.argv0
         
     @classproperty
+    def Arg(cls):
+        """ just in case of typo return sam    e as Easy.Args"""
+        return Funcs.Args
+    @classproperty
     def Args(cls):
         return Funcs.Args
         
@@ -369,11 +372,32 @@ class Easy( metaclass=EasyMeta ):
     def ArgsParser(cls):
         from . import ArgsParser
         return ArgsParser.ArgsParser
-
+    
+    @classproperty
+    def ArgsAsOpts(cls):
+        return Funcs.ArgsAsOpts
+    
+    @classproperty
+    def ArgsToOpts(cls):
+        return Funcs.ArgsToOpts
+    
     @classproperty
     def Argv(cls):
         import sys
         return sys.argv
+
+    @classproperty
+    def Attrs(cls):
+        return Easy.Mods.attrs
+    
+    @classproperty
+    def AttrsDef(cls):
+        return Easy.Mods.attrs.define
+    
+    @classproperty
+    def AttrsField(cls):
+        import attrs
+        return Easy.Mods.attrs.field
                 
     @classmethod
     def Call( cls, *args, **kwargs ):
@@ -528,21 +552,33 @@ class Easy( metaclass=EasyMeta ):
         return cls.Inst.getCode()
 
     @classproperty
+    def ContextManager(cls):
+        return Funcs.ContextManager
+
+
+    @classproperty
     def CurrentWorkDir( cls ):
         return cls.GetCwd()
-    
-    @classproperty
-    def GetCwd( cls ):
-        # i = cls.Inst
-        return Funcs.GetCwd
-    
-    @classproperty
-    def Getcwd( cls ):  ## just an alternative capitalization
-        return Funcs.GetCwd
-        
+ 
     @classproperty
     def Cwd( cls ):
         return Funcs.GetCwd()
+       
+    @classproperty
+    def Dataclass( cls ):
+        return Easy.Mods.dataclasses.dataclass
+       
+    @classproperty
+    def DataClass( cls ):
+        return Easy.Mods.dataclasses.dataclass
+    
+    @classproperty
+    def Dataclasses( cls ):
+        return Easy.Mods.dataclasses
+   
+    @classproperty
+    def DataClasses( cls ):
+        return Easy.Mods.dataclasses
    
     @classproperty
     def DictOfDefaultsOntoObj( cls ):
@@ -774,6 +810,15 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def Funcs(cls):
         return Funcs
+
+    @classproperty
+    def GetCwd( cls ):
+        # i = cls.Inst
+        return Funcs.GetCwd
+    
+    @classproperty
+    def Getcwd( cls ):  ## just an alternative capitalization
+        return Funcs.GetCwd
         
     @classproperty
     def GetFirstNonNoneElseReturnNone(cls):
@@ -859,7 +904,21 @@ class Easy( metaclass=EasyMeta ):
         #print( 'no setter available' )
         raise AttributeError("Can't assign to readonly Inst property")
 
+    @classproperty
+    def Ipy(cls):
+        from . import Ipy
+        return Ipy.EasyIpy
 
+
+
+    @classproperty
+    def JoinDir(cls):
+        return Funcs.JoinDir
+    
+    @classproperty
+    def JoinDirs(cls):
+        return Funcs.JoinDir
+    
     @classproperty
     def JoinDirFileExt(cls):
         return Funcs.JoinDirFileExt 
@@ -892,9 +951,128 @@ class Easy( metaclass=EasyMeta ):
                 as EasyKeysMod
         return EasyKeysMod
 
+
+    @classmethod  ## for some reason, as @classproperty caused problems w *args, **kwargs
+    def Log(cls,*args, **kwargs):
+        from . import Logger     
+        return Logger.Logger.Log(*args,**kwargs)
+
+    @classproperty
+    def Logger(cls): 
+        from . import Logger       
+        return Logger.Logger
+    
+    @classproperty
+    def Logging(cls):
+        import logging
+        return logging
+    
+    @classmethod ## for some reason, as @classproperty caused problems w *args, **kwargs
+    def Llog(cls, *args, **kwargs): 
+        from . import Logger     
+        return Logger.Logger.Llog(*args,**kwargs)
+    
+    
+    @classproperty
+    def LogFormatDisable(cls, format='' ):
+        from . import Logger       
+        return Logger.Logger.LogFormatDisable
+            
+    @classproperty
+    def LogFormatEnable(cls, format=None ):
+        from . import Logger       
+        return Logger.Logger.LogFormatEnable
+            
+    @classproperty
+    def LogFormatCtx(cls, format='' ):
+        from . import Logger       
+        return Logger.Logger.LogFormatCtx
+    
+    @classmethod ## for some reason, as @classproperty caused problems w *args, **kwargs
+    def LogN(cls, *args, **kwargs ):
+        from . import Logger       
+        return Logger.Logger.LogN(*args, **kwargs)
+    
+    @classmethod ## for some reason, as @classproperty caused problems w *args, **kwargs
+    def LlogN(cls, *args, **kwargs ):
+        from . import Logger       
+        return Logger.Logger.LlogN(*args, **kwargs)
+
+    @classproperty
+    def LogSetLevel(cls, level):
+        from . import Logger       
+        return Logger.Logger.LogSetLevel   
+        
+    @classproperty
+    def LogGetDefaultLogger(cls):
+        from . import Logger       
+        return Logger.Logger.GetDefaultLogger
+        
+    
+        
+    
+    """
+    @classmethod
+    def Logger(cls, default=info, ):
+        import logging
+        n = cls.Namespace()
+        ## these are simplified levels,
+        ## not the real ints since error int is actually 40 etc
+        simpleIntsToLevels = {
+            0:'debug',
+            1:'debug',
+            2:'info',
+            3:'warning',
+            4:'error',
+            5:'critical',
+        }
+        simpleLevelsToInts = {}
+        for k,v in intsToLevels.items():
+            levelsToInts[v]=k
+            
+        if isinstance( level, int):
+            level = simpleIntsToLevels[]
+            
+        ##
+        intsToLevels = {
+            50='critical'
+            40='error'
+            30='warning'
+            20='info'
+            10='debug'
+            0='notset'
+        }
+        assert logging.CRITICAL=50
+        assert logging.ERROR=40
+        assert logging.WARNING=30
+        assert logging.INFO=20
+        assert logging.DEBUG=10
+        assert logging.NOTSET=0
+        
+        n.simpleIntsToLevels = simpleIntsToLevels
+        n.simpleLevelsToInts = simpleLevelsToInts
+        n.l1=logging.debug
+        n.l2=logging.debug
+        n.l3=logging.warning
+        n.l3=logging.error
+        n.l3=logging.critical
+        n.l0=[l1,l2,l3,l4,l5] ## this one is zero based index
+        n.l=[ l1,l1,l2,l3,l4,l5 ] ## this one has indexes that match levels
+        
+        n.log = cls.Log
+        return n  ## return the new loger object
+    
+    #@def
+    """
+        
+
     @classproperty
     def Ls(cls):
         return Funcs.Ls
+    
+    @classproperty
+    def LsAbs(cls):
+        return Funcs.LsAbs
     
     ## We call it "Magic" because it triggers all kinds of background
     ## stuff to happen.  Magic often implies that
@@ -924,6 +1102,15 @@ class Easy( metaclass=EasyMeta ):
     @classproperty
     def Modules(cls):
         return cls.Inst.modules    
+    
+    @classproperty
+    def ModFromName(cls,name):
+        import sys
+        return sys.modules(name)
+    
+    @classproperty
+    def NamedTuple(cls):
+        return Easy.Mods.collections.namedtuple    
 
     @classmethod
     def Namespace(cls):
@@ -978,8 +1165,19 @@ class Easy( metaclass=EasyMeta ):
     def PipInstall( cls ):
         return Funcs.PipInstall
     @classproperty
+    def Pprint(cls):
+        return Easy.Mods.pprint.pprint
+    
+    @classproperty
+    def PPrint(cls):
+        return Easy.Mods.pprint.pprint
+    
+    @classproperty
     def Prints(cls):
         return Funcs.Prints
+    @classproperty
+    def PrintFile(cls):
+        return Funcs.PrintFile
     @classproperty
     def PrintLoop(cls):
         return Funcs.PrintLoop
@@ -1224,7 +1422,79 @@ class Easy( metaclass=EasyMeta ):
         import subprocess
         sub = subprocess.run( *args, capture_output=capture_output, **kwargs )
         return sub
+ 
+    """
+    Should change the SysXX cmds below to use platform.system instead
+    gives values like  Windows   Linux  Darwin  etc
+      os.name or sys.platform are other ones, might be less useful
+              sys.platform get sys it was *BUILT ON*  not useful
+    Easy.Mods.platform.system()
     
+    """
+    
+    @classproperty
+    def Sys(cls):
+        import sys
+        return sys
+        
+    #@classproperty
+    #def SysModules(cls):
+    #    import sys
+    #    return sys.modules
+
+
+    @classproperty
+    def SysIsLinuxLike(cls):
+        """
+        Liknux like means any non-mac non-windows
+        system that's mostly posix.
+        """
+        import os
+        import platform
+        if (os.name=='posix' and
+              (not platform.system().lower().startswith('darwin') )
+            ):
+            return True
+        else:
+            return False
+    
+    
+    @classproperty
+    def SysIsMac(cls):
+        """
+        Windows means MacOS or Mac OSX etc
+          modern macs circa 2022
+            also known as "Darwin"
+        """        
+        import sys
+        return sys.platform.lower().startswith('darwin')
+    
+    @classproperty
+    def SysIsOther(cls):
+        """
+        Windows means MacOS or Mac OSX etc
+          modern macs circa 2022
+            also known as "Darwin"
+        """        
+        import sys
+        return not (
+            cls.SysIsMac or cls.SysIsWindows
+            or cls.SysIsLinuxLike
+        )
+    
+    @classproperty
+    def SysIsWindows(cls):
+        """
+        Windows means modern windows circa 2022
+          decended/derived from nt
+            nt>2000>XP>Vista>7>8>10>11>etc
+            support the win32 api etc
+        """
+        import os
+        return os.name=='nt'
+
+
+        
     @classmethod
     def Tail( cls, *args, **kwargs ):
         argsList = list(args) ##
@@ -1522,6 +1792,27 @@ class Easy( metaclass=EasyMeta ):
             if iProc.Name==name:  ##.startswith( "WmiPrvSE"):
                 wmiProcs.append( iProc )
         return wmiProcs
+
+    @classmethod
+    def Xi(cls, cmd, *args, **kwargs ):
+        """
+            Run an interactive subprocess command
+            mostly for running bash commands
+        
+            On LinuxLike (incl BSD) and Mac Systems
+            will always use bash to run it
+            via:  "/bin/bash -i -c "
+            
+            Doesn't work with mc in ipython, not sure why
+        """
+        if cls.SysIsWindows:
+            print( 'is windows' )
+            return cls.SubInteract( cmd, shell=True )
+        elif cls.SysIsLinuxLike or cls.SysIsMac:
+            shellExe='/bin/bash'
+            return cls.SubInteract( [ shellExe, '-i', '-c', cmd ]  )
+        else:
+            raise NotImplementedError
 
     @classmethod           
     def Ytdl(cls, *args, **kwargs ):
